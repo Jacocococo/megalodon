@@ -146,7 +146,7 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 	@Override
 	protected void onShown(){
 		super.onShown();
-		if(!dataLoading){
+		if(!dataLoading && canRefreshWithoutUpsettingUser()){
 			if(onlyMentions){
 				refresh();
 			}else{
@@ -364,5 +364,21 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 		return base.path(isInstanceAkkoma()
 				? "/users/" + getSession().self.username + "/interactions"
 				: "/notifications").build();
+	}
+
+	private boolean canRefreshWithoutUpsettingUser(){
+		// TODO maybe reload notifications the same way we reload the home timelines, i.e. with gaps and stuff
+		if(data.size()<=itemsPerPage)
+			return true;
+		for(int i=list.getChildCount()-1;i>=0;i--){
+			if(list.getChildViewHolder(list.getChildAt(i)) instanceof StatusDisplayItem.Holder<?> itemHolder){
+				String id=itemHolder.getItemID();
+				for(int j=0;j<data.size();j++){
+					if(data.get(j).id.equals(id))
+						return j<itemsPerPage; // Can refresh the list without losing scroll position if it is within the first page
+				}
+			}
+		}
+		return true;
 	}
 }
