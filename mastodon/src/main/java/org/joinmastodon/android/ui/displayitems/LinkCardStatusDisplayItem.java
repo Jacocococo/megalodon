@@ -84,7 +84,8 @@ public class LinkCardStatusDisplayItem extends StatusDisplayItem{
 					crossfadeDrawable.setSize(itemView.getWidth(), itemView.getHeight());
 				}
 				crossfadeDrawable.setBlurhashDrawable(card.blurhashPlaceholder);
-				crossfadeDrawable.setCrossfadeAlpha(item.status.spoilerRevealed ? 0f : 1f);
+				crossfadeDrawable.setCrossfadeAlpha(0f);
+				photo.setImageDrawable(null);
 				photo.setImageDrawable(crossfadeDrawable);
 				didClear=false;
 			}
@@ -102,8 +103,14 @@ public class LinkCardStatusDisplayItem extends StatusDisplayItem{
 		@Override
 		public void setImage(int index, Drawable drawable){
 			crossfadeDrawable.setImageDrawable(drawable);
-			if(didClear && item.status.spoilerRevealed)
+			if(didClear)
 				crossfadeDrawable.animateAlpha(0f);
+			Card card=item.status.card;
+			// Make sure the image is not stretched if the server returned wrong dimensions
+			if(drawable!=null && (drawable.getIntrinsicWidth()!=card.width || drawable.getIntrinsicHeight()!=card.height)){
+				photo.setImageDrawable(null);
+				photo.setImageDrawable(crossfadeDrawable);
+			}
 		}
 
 		@Override
