@@ -160,7 +160,7 @@ public class SettingsMainFragment extends BaseSettingsFragment<Void>{
 	}
 
 	private void onManageAccountsClick(ListItem<?> item){
-		new AccountSwitcherSheet(getActivity(), null).show();
+		new AccountSwitcherSheet(getActivity(), null).setOnLoggedOutCallback(()->loggedOut=true).show();
 	}
 
 	private void onLogOutClick(ListItem<?> item_){

@@ -67,6 +67,7 @@ public class AccountSwitcherSheet extends BottomSheet{
 	private List<WrappedAccount> accounts;
 	private ListImageLoaderWrapper imgLoader;
 	private AccountsAdapter accountsAdapter;
+	private Runnable onLoggedOutCallback;
 
 	public AccountSwitcherSheet(@NonNull Activity activity, @Nullable HomeFragment fragment){
 		this(activity, fragment, false, false);
@@ -129,6 +130,11 @@ public class AccountSwitcherSheet extends BottomSheet{
 		this.onClick = onClick;
 	}
 
+	public AccountSwitcherSheet setOnLoggedOutCallback(Runnable onLoggedOutCallback){
+		this.onLoggedOutCallback=onLoggedOutCallback;
+		return this;
+	}
+
 	private void confirmLogOut(String accountID){
 		AccountSession session=AccountSessionManager.getInstance().getAccount(accountID);
 		new M3AlertDialogBuilder(activity)
@@ -147,7 +153,11 @@ public class AccountSwitcherSheet extends BottomSheet{
 	}
 
 	private void logOut(String accountID){
+		String activeAccount=AccountSessionManager.getInstance().getLastActiveAccountID();
 		AccountSessionManager.get(accountID).logOut(activity, ()->{
+			if(accountID.equals(activeAccount) && onLoggedOutCallback!=null)
+				onLoggedOutCallback.run();
+			dismiss();
 			((MainActivity)activity).restartActivity();
 		});
 	}
@@ -166,6 +176,8 @@ public class AccountSwitcherSheet extends BottomSheet{
 							AccountSessionManager.getInstance().removeAccount(session.getID());
 							sessions.remove(session);
 							if(sessions.isEmpty()){
+								if(onLoggedOutCallback!=null)
+									onLoggedOutCallback.run();
 								progress.dismiss();
 								Nav.goClearingStack(activity, SplashFragment.class, null);
 								dismiss();
@@ -177,6 +189,8 @@ public class AccountSwitcherSheet extends BottomSheet{
 							AccountSessionManager.getInstance().removeAccount(session.getID());
 							sessions.remove(session);
 							if(sessions.isEmpty()){
+								if(onLoggedOutCallback!=null)
+									onLoggedOutCallback.run();
 								progress.dismiss();
 								Nav.goClearingStack(activity, SplashFragment.class, null);
 								dismiss();
