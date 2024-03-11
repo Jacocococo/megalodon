@@ -683,4 +683,6 @@
 	<string name="onboarding_recommendations_intro">You curate your own home feed. The more people you follow, the more active and interesting it will be.</string>
 	<string name="onboarding_recommendations_title">Personalize your home feed</string>
 	<string name="article_by_author">By %s</string>
+	<string name="mute_conversation">Mute conversation</string>
+	<string name="unmute_conversation">Unmute conversation</string>
 </resources>

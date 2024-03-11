@@ -27,6 +27,7 @@ import org.joinmastodon.android.api.requests.accounts.GetAccountRelationships;
 import org.joinmastodon.android.api.requests.announcements.DismissAnnouncement;
 import org.joinmastodon.android.api.requests.statuses.CreateStatus;
 import org.joinmastodon.android.api.requests.statuses.GetStatusSourceText;
+import org.joinmastodon.android.api.requests.statuses.SetStatusConversationMuted;
 import org.joinmastodon.android.api.session.AccountLocalPreferences;
 import org.joinmastodon.android.api.session.AccountSession;
 import org.joinmastodon.android.api.session.AccountSessionManager;
@@ -260,6 +261,22 @@ public class HeaderStatusDisplayItem extends StatusDisplayItem{
 					UiUtils.launchWebBrowser(activity, item.status.url);
 				}else if(id==R.id.copy_link){
 					UiUtils.copyText(parent, item.status.url);
+				}else if(id==R.id.mute_conversation){
+					new SetStatusConversationMuted(item.status.id, !item.status.muted)
+							.setCallback(new Callback<>(){
+								@Override
+								public void onSuccess(Status result){
+									// TODO snackbar?
+									item.status.muted=result.muted;
+								}
+
+								@Override
+								public void onError(ErrorResponse error){
+									error.showToast(activity);
+								}
+							})
+							.wrapProgress(activity, R.string.loading, true)
+							.exec(item.accountID);
 				}else if(id==R.id.follow){
 					if(relationship==null)
 						return true;
@@ -510,6 +527,13 @@ public class HeaderStatusDisplayItem extends StatusDisplayItem{
 
 			AccountLocalPreferences lp = AccountSessionManager.get(item.accountID).getLocalPreferences();
 			MenuItem bookmark=menu.findItem(R.id.bookmark);
+			MenuItem muteConversation=menu.findItem(R.id.mute_conversation);
+			if(item.status.muted!=null){
+				muteConversation.setVisible((isOwnPost || item.parentFragment.isInstanceAkkoma()) || item.parentFragment instanceof NotificationsListFragment);
+				muteConversation.setTitle(item.status.muted ? R.string.unmute_conversation : R.string.mute_conversation);
+			}else{
+				muteConversation.setVisible(false);
+			}
 			if(lp.newEmojiReactionButton==AccountLocalPreferences.NewEmojiReactionButton.REPLACE_BOOKMARK && item.status!=null){
 				bookmark.setVisible(true);
 				bookmark.setTitle(item.status.bookmarked ? R.string.remove_bookmark : R.string.add_bookmark);
