@@ -33,10 +33,14 @@ public abstract class ListItemViewHolder<T extends ListItem<?>> extends Bindable
 
 	@Override
 	public void onBind(T item){
-		if(TextUtils.isEmpty(item.title))
-			title.setText(item.titleRes);
-		else
-			title.setText(item.title);
+		try {
+			if(TextUtils.isEmpty(item.title))
+				title.setText(item.titleRes);
+			else
+				title.setText(item.title);
+		} catch (Exception ignored) {
+			return;
+		}
 
 		if(TextUtils.isEmpty(item.subtitle) && item.subtitleRes==0){
 			subtitle.setVisibility(View.GONE);
