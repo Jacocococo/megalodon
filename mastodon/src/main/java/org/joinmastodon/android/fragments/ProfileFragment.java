@@ -1427,8 +1427,10 @@ public class ProfileFragment extends LoaderFragment implements OnBackPressedList
 
 	@Override
 	public void scrollToTop(){
-		getScrollableRecyclerView().scrollToPosition(0);
-		scrollView.smoothScrollTo(0, 0);
+		try {
+			getScrollableRecyclerView().scrollToPosition(0);
+			scrollView.smoothScrollTo(0, 0);
+		} catch(NullPointerException ignored) {}
 	}
 
 	private void onFollowersOrFollowingClick(View v){
