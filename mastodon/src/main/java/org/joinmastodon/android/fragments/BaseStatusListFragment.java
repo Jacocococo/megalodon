@@ -647,6 +647,8 @@ public abstract class BaseStatusListFragment<T extends DisplayItemsParent> exten
 		if(s.textExpandable!=expandable && list!=null) {
 			s.textExpandable=expandable;
 			List<HeaderStatusDisplayItem.Holder> headers=findAllHoldersOfType(holder.getItemID(), HeaderStatusDisplayItem.Holder.class);
+			if(headers.isEmpty())
+				return;
 			HeaderStatusDisplayItem.Holder header=headers.size() > 1 && isForQuote ? headers.get(1) : headers.get(0);
 			if(header!=null) header.bindCollapseButton();
 		}
@@ -658,7 +660,9 @@ public abstract class BaseStatusListFragment<T extends DisplayItemsParent> exten
 		TextStatusDisplayItem.Holder text = textItems.size() > 1 && isForQuote ? textItems.get(1) : textItems.get(0);
 		adapter.notifyItemChanged(text.getAbsoluteAdapterPosition());
 		List<HeaderStatusDisplayItem.Holder> headers=findAllHoldersOfType(itemID, HeaderStatusDisplayItem.Holder.class);
-		HeaderStatusDisplayItem.Holder header=headers.size() > 1 && isForQuote ? headers.get(1) : headers.get(0);
+		HeaderStatusDisplayItem.Holder header=null;
+		if(!headers.isEmpty())
+			header=headers.size() > 1 && isForQuote ? headers.get(1) : headers.get(0);
 		if(header!=null) header.animateExpandToggle();
 		else notifyItemChanged(itemID, HeaderStatusDisplayItem.class);
 	}
