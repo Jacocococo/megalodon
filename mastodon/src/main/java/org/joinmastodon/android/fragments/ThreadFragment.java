@@ -21,6 +21,8 @@ import org.joinmastodon.android.model.FilterContext;
 import org.joinmastodon.android.model.Status;
 import org.joinmastodon.android.model.StatusContext;
 import org.joinmastodon.android.ui.BetterItemAnimator;
+import org.joinmastodon.android.ui.displayitems.DummyStatusDisplayItem;
+import org.joinmastodon.android.ui.displayitems.EmojiReactionsStatusDisplayItem;
 import org.joinmastodon.android.ui.displayitems.ExtendedFooterStatusDisplayItem;
 import org.joinmastodon.android.ui.displayitems.FooterStatusDisplayItem;
 import org.joinmastodon.android.ui.displayitems.ReblogOrReplyLineStatusDisplayItem;
@@ -120,7 +122,9 @@ public class ThreadFragment extends StatusListFragment implements ProvidesAssist
     
 		for (int deleteThisItem : deleteTheseItems) itemsToModify.remove(deleteThisItem);
 		if(s.id.equals(mainStatus.id)) {
-			items.add(new ExtendedFooterStatusDisplayItem(s.id, this, accountID, s.getContentStatus()));
+			if(items.get(items.size()-2) instanceof EmojiReactionsStatusDisplayItem)
+				items.add(items.size()-1, new DummyStatusDisplayItem(s.id, this));
+			items.add(items.size()-1, new ExtendedFooterStatusDisplayItem(s.id, this, accountID, s.getContentStatus()));
 		}
 		return items;
 	}

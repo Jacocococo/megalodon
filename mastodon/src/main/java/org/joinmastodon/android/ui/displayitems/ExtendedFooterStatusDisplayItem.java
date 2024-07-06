@@ -15,8 +15,6 @@ import android.widget.TextView;
 
 import org.joinmastodon.android.GlobalUserPreferences;
 import org.joinmastodon.android.R;
-import org.joinmastodon.android.api.session.AccountSession;
-import org.joinmastodon.android.api.session.AccountSessionManager;
 import org.joinmastodon.android.fragments.BaseStatusListFragment;
 import org.joinmastodon.android.fragments.StatusEditHistoryFragment;
 import org.joinmastodon.android.fragments.account_list.StatusFavoritesListFragment;
@@ -28,6 +26,7 @@ import org.joinmastodon.android.ui.utils.UiUtils;
 import org.parceler.Parcels;
 
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Locale;
@@ -38,7 +37,8 @@ import me.grishka.appkit.Nav;
 public class ExtendedFooterStatusDisplayItem extends StatusDisplayItem{
 	public final String accountID;
 
-	private static final DateTimeFormatter TIME_FORMATTER=DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG, FormatStyle.SHORT);
+	private static final DateTimeFormatter DATE_FORMATTER=DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM);
+	private static final DateTimeFormatter TIME_FORMATTER=DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT);
 
 	public ExtendedFooterStatusDisplayItem(String parentID, BaseStatusListFragment parentFragment, String accountID, Status status){
 		super(parentID, parentFragment);
@@ -52,7 +52,7 @@ public class ExtendedFooterStatusDisplayItem extends StatusDisplayItem{
 	}
 
 	public static class Holder extends StatusDisplayItem.Holder<ExtendedFooterStatusDisplayItem>{
-		private final TextView time;
+		private final TextView date, time, timeAppSeparator;
 		private final Button favorites, reblogs, editHistory, applicationName;
 		private final ImageView visibility;
 		private final Context context;
@@ -65,7 +65,9 @@ public class ExtendedFooterStatusDisplayItem extends StatusDisplayItem{
 			editHistory=findViewById(R.id.edit_history);
 			applicationName=findViewById(R.id.application_name);
 			visibility=findViewById(R.id.visibility);
-			time=findViewById(R.id.timestamp);
+			date=findViewById(R.id.date);
+			time=findViewById(R.id.time);
+			timeAppSeparator=findViewById(R.id.time_app_separator);
 
 			reblogs.setOnClickListener(v->startAccountListFragment(StatusReblogsListFragment.class));
 			favorites.setOnClickListener(v->startAccountListFragment(StatusFavoritesListFragment.class));
@@ -87,10 +89,15 @@ public class ExtendedFooterStatusDisplayItem extends StatusDisplayItem{
 			}else{
 				editHistory.setVisibility(View.GONE);
 			}
-			String timeStr=item.status.createdAt != null ? TIME_FORMATTER.format(item.status.createdAt.atZone(ZoneId.systemDefault())) : null;
-			
+			ZonedDateTime dateTime=item.status.createdAt.atZone(ZoneId.systemDefault());
+			String dateStr=item.status.createdAt!=null ? DATE_FORMATTER.format(dateTime) : null;
+			String timeStr=item.status.createdAt!=null ? TIME_FORMATTER.format(dateTime) : null;
+			date.setText(dateStr);
+			time.setText(timeStr);
+
 			if (item.status.application!=null && !TextUtils.isEmpty(item.status.application.name)) {
-				time.setText(timeStr != null ? item.parentFragment.getString(R.string.timestamp_via_app, timeStr, "") : "");
+				timeAppSeparator.setVisibility(View.VISIBLE);
+				applicationName.setVisibility(View.VISIBLE);
 				applicationName.setText(item.status.application.name);
 				if (item.status.application.website != null && item.status.application.website.toLowerCase().startsWith("https://")) {
 					applicationName.setOnClickListener(e -> UiUtils.openURL(context, null, item.status.application.website));
@@ -98,8 +105,8 @@ public class ExtendedFooterStatusDisplayItem extends StatusDisplayItem{
 					applicationName.setEnabled(false);
 				}
 			} else {
-				time.setText(timeStr);
 				applicationName.setVisibility(View.GONE);
+				timeAppSeparator.setVisibility(View.GONE);
 			}
 
 			visibility.setImageResource(switch (s.visibility) {
