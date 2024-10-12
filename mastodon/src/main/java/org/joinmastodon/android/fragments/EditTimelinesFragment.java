@@ -197,7 +197,21 @@ public class EditTimelinesFragment extends MastodonRecyclerFragment<TimelineDefi
 		listsMenu.getItem().setVisible(listsMenu.size()>0);
 		hashtagsMenu.getItem().setVisible(hashtagsMenu.size()>0);
 
+		// adds icons to title using image spans
 		UiUtils.enableOptionsMenuIcons(getContext(), optionsMenu, R.id.menu_add_timeline);
+
+		// remove icons from items so they don't appear twice (system + image span)
+		timelinesMenu.setIcon(null);
+		UiUtils.removeMenuIcons(timelinesMenu);
+		listsMenu.setIcon(null);
+		UiUtils.removeMenuIcons(listsMenu);
+		hashtagsMenu.setIcon(null);
+		UiUtils.removeMenuIcons(hashtagsMenu);
+
+		// reset header titles to remove icons
+		timelinesMenu.setHeaderTitle(R.string.sk_timeline);
+		listsMenu.setHeaderTitle(R.string.sk_list);
+		hashtagsMenu.setHeaderTitle(R.string.sk_hashtag);
 	}
 
 	private void saveTimelines(){

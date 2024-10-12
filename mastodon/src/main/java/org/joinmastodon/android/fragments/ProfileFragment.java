@@ -863,13 +863,13 @@ public class ProfileFragment extends LoaderFragment implements OnBackPressedList
 			return;
 		}
 
-		menu.findItem(R.id.manage_user_lists).setTitle(getString(R.string.sk_lists_with_user, account.getShortUsername()));
+		UiUtils.setMenuItemTitle(menu.findItem(R.id.manage_user_lists), getString(R.string.sk_lists_with_user, account.getShortUsername()));
 		MenuItem mute=menu.findItem(R.id.mute);
 		mute.setTitle(getString(relationship.muting ? R.string.unmute_user : R.string.mute_user, account.getShortUsername()));
 		mute.setIcon(relationship.muting ? R.drawable.ic_fluent_speaker_0_24_regular : R.drawable.ic_fluent_speaker_off_24_regular);
 		UiUtils.insetPopupMenuIcon(getContext(), mute);
-		menu.findItem(R.id.block).setTitle(getString(relationship.blocking ? R.string.unblock_user : R.string.block_user, account.getShortUsername()));
-		menu.findItem(R.id.report).setTitle(getString(R.string.report_user, account.getShortUsername()));
+		UiUtils.setMenuItemTitle(menu.findItem(R.id.block), getString(relationship.blocking ? R.string.unblock_user : R.string.block_user, account.getShortUsername()));
+		UiUtils.setMenuItemTitle(menu.findItem(R.id.report), getString(R.string.report_user, account.getShortUsername()));
 		menu.findItem(R.id.manage_user_lists).setVisible(relationship.following);
 		menu.findItem(R.id.soft_block).setVisible(relationship.followedBy && !relationship.following);
 		MenuItem hideBoosts=menu.findItem(R.id.hide_boosts);
@@ -883,13 +883,13 @@ public class ProfileFragment extends LoaderFragment implements OnBackPressedList
 		}
 		MenuItem blockDomain=menu.findItem(R.id.block_domain);
 		if(!account.isLocal()){
-			blockDomain.setTitle(getString(relationship.domainBlocking ? R.string.unblock_domain : R.string.block_domain, account.getDomain()));
+			UiUtils.setMenuItemTitle(blockDomain, getString(relationship.domainBlocking ? R.string.unblock_domain : R.string.block_domain, account.getDomain()));
 			blockDomain.setVisible(true);
 		}else{
 			blockDomain.setVisible(false);
 		}
-		menu.findItem(R.id.edit_note).setTitle(noteWrap.getVisibility()==View.GONE && (relationship.note==null || relationship.note.isEmpty())
-				? R.string.sk_add_note : R.string.sk_delete_note);
+		UiUtils.setMenuItemTitle(menu.findItem(R.id.edit_note),
+				getString(noteWrap.getVisibility()==View.GONE && (relationship.note==null || relationship.note.isEmpty()) ? R.string.sk_add_note : R.string.sk_delete_note));
 	}
 
 	@Override

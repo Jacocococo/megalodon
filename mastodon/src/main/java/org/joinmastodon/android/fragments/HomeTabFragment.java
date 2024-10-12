@@ -327,26 +327,34 @@ public class HomeTabFragment extends MastodonToolbarFragment implements Scrollab
 	private void addListsToOverflowMenu() {
 		Context ctx = getContext();
 		listsMenu.clear();
+		listsMenu.setHeaderTitle(R.string.sk_your_lists); // remove icon
 		listsMenu.getItem().setVisible(listItems.size() > 0);
-		UiUtils.insetPopupMenuIcon(ctx, UiUtils.makeBackItem(listsMenu));
+		MenuItem back = UiUtils.makeBackItem(listsMenu);
+		UiUtils.insetPopupMenuIcon(ctx, back);
+		back.setIcon(null); // handled through image span in insetPopupMenuIcon
 		listItems.forEach((id, list) -> {
 			MenuItem item = listsMenu.add(Menu.NONE, id, Menu.NONE, list.title);
 			item.setIcon(R.drawable.ic_fluent_people_24_regular);
 			UiUtils.insetPopupMenuIcon(ctx, item);
+			item.setIcon(null); // handled through image span in insetPopupMenuIcon
 		});
 	}
 
 	private void addHashtagsToOverflowMenu() {
 		Context ctx = getContext();
 		hashtagsMenu.clear();
+		hashtagsMenu.setHeaderTitle(R.string.sk_hashtags_you_follow); // remove icon
 		hashtagsMenu.getItem().setVisible(hashtagsItems.size() > 0);
-		UiUtils.insetPopupMenuIcon(ctx, UiUtils.makeBackItem(hashtagsMenu));
+		MenuItem back = UiUtils.makeBackItem(hashtagsMenu);
+		UiUtils.insetPopupMenuIcon(ctx, back);
+		back.setIcon(null); // handled through image span in insetPopupMenuIcon
 		hashtagsItems.entrySet().stream()
 				.sorted(Comparator.comparing(x -> x.getValue().name, String.CASE_INSENSITIVE_ORDER))
 				.forEach(entry -> {
 					MenuItem item = hashtagsMenu.add(Menu.NONE, entry.getKey(), Menu.NONE, entry.getValue().name);
 					item.setIcon(R.drawable.ic_fluent_number_symbol_24_regular);
 					UiUtils.insetPopupMenuIcon(ctx, item);
+					item.setIcon(null); // handled through image span in insetPopupMenuIcon
 				});
 	}
 

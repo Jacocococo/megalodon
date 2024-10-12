@@ -530,13 +530,13 @@ public class HeaderStatusDisplayItem extends StatusDisplayItem{
 			MenuItem muteConversation=menu.findItem(R.id.mute_conversation);
 			if(item.status.muted!=null){
 				muteConversation.setVisible((isOwnPost || item.parentFragment.isInstanceAkkoma()) || item.parentFragment instanceof NotificationsListFragment);
-				muteConversation.setTitle(item.status.muted ? R.string.unmute_conversation : R.string.mute_conversation);
+				UiUtils.setMenuItemTitle(muteConversation, item.parentFragment.getString(item.status.muted ? R.string.unmute_conversation : R.string.mute_conversation));
 			}else{
 				muteConversation.setVisible(false);
 			}
 			if(lp.newEmojiReactionButton==AccountLocalPreferences.NewEmojiReactionButton.REPLACE_BOOKMARK && item.status!=null){
 				bookmark.setVisible(true);
-				bookmark.setTitle(item.status.bookmarked ? R.string.remove_bookmark : R.string.add_bookmark);
+				UiUtils.setMenuItemTitle(bookmark, item.parentFragment.getString(item.status.bookmarked ? R.string.remove_bookmark : R.string.add_bookmark));
 			}else{
 				bookmark.setVisible(false);
 			}
@@ -559,8 +559,8 @@ public class HeaderStatusDisplayItem extends StatusDisplayItem{
 				mute.setTitle(item.parentFragment.getString(relationship!=null && relationship.muting ? R.string.unmute_user : R.string.mute_user, username));
 				mute.setIcon(relationship!=null && relationship.muting ? R.drawable.ic_fluent_speaker_0_24_regular : R.drawable.ic_fluent_speaker_off_24_regular);
 				UiUtils.insetPopupMenuIcon(item.parentFragment.getContext(), mute);
-				block.setTitle(item.parentFragment.getString(relationship!=null && relationship.blocking ? R.string.unblock_user : R.string.block_user, username));
-				report.setTitle(item.parentFragment.getString(R.string.report_user, username));
+				UiUtils.setMenuItemTitle(block, item.parentFragment.getString(relationship!=null && relationship.blocking ? R.string.unblock_user : R.string.block_user, username));
+				UiUtils.setMenuItemTitle(report, item.parentFragment.getString(R.string.report_user, username));
 				// disabled in megalodon. domain blocks from a post clutters the context menu and looks out of place
 //				if(!account.isLocal()){
 //					blockDomain.setVisible(true);
@@ -572,7 +572,7 @@ public class HeaderStatusDisplayItem extends StatusDisplayItem{
 				follow.setTitle(item.parentFragment.getString(following ? R.string.unfollow_user : R.string.follow_user, username));
 				follow.setIcon(following ? R.drawable.ic_fluent_person_delete_24_regular : R.drawable.ic_fluent_person_add_24_regular);
 				manageUserLists.setVisible(relationship != null && relationship.following);
-				manageUserLists.setTitle(item.parentFragment.getString(R.string.sk_lists_with_user, username));
+				UiUtils.setMenuItemTitle(manageUserLists, item.parentFragment.getString(R.string.sk_lists_with_user, username));
 				// ic_fluent_person_add_24_regular actually has a width of 25dp -.-
 				UiUtils.insetPopupMenuIcon(item.parentFragment.getContext(), follow, following ? 0 : V.dp(-1));
 			}
@@ -613,9 +613,9 @@ public class HeaderStatusDisplayItem extends StatusDisplayItem{
 				float singleSpaceWidth = paint.measureText(" ");
 				int howManySpaces = (int) Math.ceil(missingWidth / singleSpaceWidth);
 				String enlargedText = openInBrowserText + " ".repeat(howManySpaces);
-				menu.findItem(R.id.open_in_browser).setTitle(enlargedText);
+				UiUtils.setMenuItemTitle(menu.findItem(R.id.open_in_browser), enlargedText);
 			} else {
-				menu.findItem(R.id.open_in_browser).setTitle(openInBrowserText);
+				UiUtils.setMenuItemTitle(menu.findItem(R.id.open_in_browser), openInBrowserText);
 			}
 		}
 	}

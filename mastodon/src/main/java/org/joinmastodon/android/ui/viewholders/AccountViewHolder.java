@@ -218,13 +218,13 @@ public class AccountViewHolder extends BindableViewHolder<AccountViewModel> impl
 		Account account=item.account;
 
 		menu.findItem(R.id.edit_note).setVisible(false);
-		menu.findItem(R.id.manage_user_lists).setTitle(fragment.getString(R.string.sk_lists_with_user, account.getShortUsername()));
+		UiUtils.setMenuItemTitle(menu.findItem(R.id.manage_user_lists), fragment.getString(R.string.sk_lists_with_user, account.getShortUsername()));
 		MenuItem mute=menu.findItem(R.id.mute);
 		mute.setTitle(fragment.getString(relationship.muting ? R.string.unmute_user : R.string.mute_user, account.getShortUsername()));
 		mute.setIcon(relationship.muting ? R.drawable.ic_fluent_speaker_0_24_regular : R.drawable.ic_fluent_speaker_off_24_regular);
 		UiUtils.insetPopupMenuIcon(fragment.getContext(), mute);
-		menu.findItem(R.id.block).setTitle(fragment.getString(relationship.blocking ? R.string.unblock_user : R.string.block_user, account.getShortUsername()));
-		menu.findItem(R.id.report).setTitle(fragment.getString(R.string.report_user, account.getShortUsername()));
+		UiUtils.setMenuItemTitle(menu.findItem(R.id.block), fragment.getString(relationship.blocking ? R.string.unblock_user : R.string.block_user, account.getShortUsername()));
+		UiUtils.setMenuItemTitle(menu.findItem(R.id.report), fragment.getString(R.string.report_user, account.getShortUsername()));
 		menu.findItem(R.id.manage_user_lists).setVisible(relationship.following);
 		menu.findItem(R.id.soft_block).setVisible(relationship.followedBy && !relationship.following);
 		MenuItem hideBoosts=menu.findItem(R.id.hide_boosts);
@@ -238,7 +238,7 @@ public class AccountViewHolder extends BindableViewHolder<AccountViewModel> impl
 		}
 		MenuItem blockDomain=menu.findItem(R.id.block_domain);
 		if(!account.isLocal()){
-			blockDomain.setTitle(fragment.getString(relationship.domainBlocking ? R.string.unblock_domain : R.string.block_domain, account.getDomain()));
+			UiUtils.setMenuItemTitle(blockDomain, fragment.getString(relationship.domainBlocking ? R.string.unblock_domain : R.string.block_domain, account.getDomain()));
 			blockDomain.setVisible(true);
 		}else{
 			blockDomain.setVisible(false);

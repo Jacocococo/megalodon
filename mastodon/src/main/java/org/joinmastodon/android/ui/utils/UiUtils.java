@@ -1,10 +1,5 @@
 package org.joinmastodon.android.ui.utils;
 
-import static android.view.Menu.NONE;
-import static org.joinmastodon.android.GlobalUserPreferences.ThemePreference.*;
-import static org.joinmastodon.android.GlobalUserPreferences.theme;
-import static org.joinmastodon.android.GlobalUserPreferences.trueBlackTheme;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -69,16 +64,15 @@ import org.joinmastodon.android.E;
 import org.joinmastodon.android.GlobalUserPreferences;
 import org.joinmastodon.android.MastodonApp;
 import org.joinmastodon.android.R;
-import org.joinmastodon.android.api.CacheController;
 import org.joinmastodon.android.api.MastodonAPIRequest;
 import org.joinmastodon.android.api.MastodonErrorResponse;
 import org.joinmastodon.android.api.StatusInteractionController;
+import org.joinmastodon.android.api.requests.accounts.AuthorizeFollowRequest;
+import org.joinmastodon.android.api.requests.accounts.RejectFollowRequest;
 import org.joinmastodon.android.api.requests.accounts.SetAccountBlocked;
 import org.joinmastodon.android.api.requests.accounts.SetAccountFollowed;
 import org.joinmastodon.android.api.requests.accounts.SetAccountMuted;
 import org.joinmastodon.android.api.requests.accounts.SetDomainBlocked;
-import org.joinmastodon.android.api.requests.accounts.AuthorizeFollowRequest;
-import org.joinmastodon.android.api.requests.accounts.RejectFollowRequest;
 import org.joinmastodon.android.api.requests.instance.GetInstance;
 import org.joinmastodon.android.api.requests.lists.DeleteList;
 import org.joinmastodon.android.api.requests.notifications.DismissNotification;
@@ -90,11 +84,11 @@ import org.joinmastodon.android.api.requests.statuses.SetStatusPinned;
 import org.joinmastodon.android.api.session.AccountLocalPreferences;
 import org.joinmastodon.android.api.session.AccountSession;
 import org.joinmastodon.android.api.session.AccountSessionManager;
-import org.joinmastodon.android.events.ScheduledStatusDeletedEvent;
-import org.joinmastodon.android.events.StatusCountersUpdatedEvent;
 import org.joinmastodon.android.events.FollowRequestHandledEvent;
 import org.joinmastodon.android.events.NotificationDeletedEvent;
 import org.joinmastodon.android.events.RemoveAccountPostsEvent;
+import org.joinmastodon.android.events.ScheduledStatusDeletedEvent;
+import org.joinmastodon.android.events.StatusCountersUpdatedEvent;
 import org.joinmastodon.android.events.StatusDeletedEvent;
 import org.joinmastodon.android.events.StatusUnpinnedEvent;
 import org.joinmastodon.android.fragments.ComposeFragment;
@@ -105,15 +99,16 @@ import org.joinmastodon.android.fragments.settings.SettingsServerFragment;
 import org.joinmastodon.android.model.Account;
 import org.joinmastodon.android.model.AccountField;
 import org.joinmastodon.android.model.Emoji;
+import org.joinmastodon.android.model.Hashtag;
 import org.joinmastodon.android.model.Instance;
 import org.joinmastodon.android.model.Notification;
-import org.joinmastodon.android.model.Hashtag;
 import org.joinmastodon.android.model.Relationship;
 import org.joinmastodon.android.model.ScheduledStatus;
 import org.joinmastodon.android.model.SearchResults;
 import org.joinmastodon.android.model.Searchable;
 import org.joinmastodon.android.model.Status;
 import org.joinmastodon.android.ui.M3AlertDialogBuilder;
+import org.joinmastodon.android.ui.text.CenteredImageSpan;
 import org.joinmastodon.android.ui.text.CustomEmojiSpan;
 import org.joinmastodon.android.ui.text.HtmlParser;
 import org.parceler.Parcels;
@@ -141,8 +136,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -161,7 +156,6 @@ import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
-
 import me.grishka.appkit.Nav;
 import me.grishka.appkit.api.Callback;
 import me.grishka.appkit.api.ErrorResponse;
@@ -170,6 +164,12 @@ import me.grishka.appkit.imageloader.requests.UrlImageLoaderRequest;
 import me.grishka.appkit.utils.CubicBezierInterpolator;
 import me.grishka.appkit.utils.V;
 import okhttp3.MediaType;
+
+import static android.view.Menu.NONE;
+import static org.joinmastodon.android.GlobalUserPreferences.ThemePreference.AUTO;
+import static org.joinmastodon.android.GlobalUserPreferences.ThemePreference.DARK;
+import static org.joinmastodon.android.GlobalUserPreferences.theme;
+import static org.joinmastodon.android.GlobalUserPreferences.trueBlackTheme;
 
 public class UiUtils {
 	private static Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -918,15 +918,38 @@ public class UiUtils {
 	 * @param addWidth set if icon is too wide/narrow. if icon is 25dp in width, set to -1dp
 	 */
 	public static void insetPopupMenuIcon(MenuItem item, ColorStateList iconTint, int addWidth) {
+		if(item.getIcon()==null)
+			return;
 		Drawable icon=item.getIcon().mutate();
 		if(Build.VERSION.SDK_INT>=26) item.setIconTintList(iconTint);
 		else icon.setTintList(iconTint);
-		int pad=V.dp(8);
 		boolean rtl=icon.getLayoutDirection()==View.LAYOUT_DIRECTION_RTL;
-		icon=new InsetDrawable(icon, rtl ? pad+addWidth : pad, 0, rtl ? pad : addWidth+pad, 0);
+		icon=new InsetDrawable(icon, rtl ? addWidth : 0, 0, rtl ? 0 : addWidth, 0);
 		item.setIcon(icon);
- 		SpannableStringBuilder ssb = new SpannableStringBuilder(item.getTitle());
+		addMenuIconToTitle(item);
+	}
+
+	public static void addMenuIconToTitle(MenuItem item) {
+		setMenuItemTitle(item, item.getTitle());
+	}
+
+	public static void setMenuItemTitle(MenuItem item, CharSequence title) {
+		Drawable icon = item.getIcon();
+		if(icon==null)
+			return;
+
+		icon.setBounds(0, 0, icon.getIntrinsicWidth(), icon.getIntrinsicHeight());
+		CenteredImageSpan iconSpan = new CenteredImageSpan(icon);
+		SpannableStringBuilder ssb = new SpannableStringBuilder("     ");
+		ssb.setSpan(iconSpan, 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+		ssb.append(title);
 		item.setTitle(ssb);
+	}
+
+	public static void removeMenuIcons(Menu m) {
+		for (int i = 0; i < m.size(); i++) {
+			m.getItem(i).setIcon(null);
+		}
 	}
 
 	public static void resetPopupItemTint(MenuItem item) {
@@ -944,7 +967,7 @@ public class UiUtils {
 			try {
 				Method m = menu.getClass().getDeclaredMethod("setOptionalIconsVisible", Boolean.TYPE);
 				m.setAccessible(true);
-				m.invoke(menu, true);
+				m.invoke(menu, false); // actually makes sure it's disabled now that it's handled through image spans
 				enableMenuIcons(context, menu, asAction);
 			} catch (Exception ignored) {
 			}
@@ -966,12 +989,12 @@ public class UiUtils {
 	public static void enablePopupMenuIcons(Context context, PopupMenu menu) {
 		Menu m = menu.getMenu();
 		if (Build.VERSION.SDK_INT >= 29) {
-			menu.setForceShowIcon(true);
+			menu.setForceShowIcon(false);
 		} else {
 			try {
 				Method setOptionalIconsVisible = m.getClass().getDeclaredMethod("setOptionalIconsVisible", boolean.class);
 				setOptionalIconsVisible.setAccessible(true);
-				setOptionalIconsVisible.invoke(m, true);
+				setOptionalIconsVisible.invoke(m, false);
 			} catch (Exception ignore) {
 			}
 		}
