@@ -1564,6 +1564,7 @@ public class UiUtils {
 		extras.putString("account", accountID);
 		if (n.status!=null) {
 			Status status=n.status;
+			status.filterRevealed=true;
 			extras.putParcelable("status", Parcels.wrap(status.clone()));
 			Nav.go((Activity) context, ThreadFragment.class, extras);
 		} else if (n.report != null) {
