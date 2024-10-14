@@ -200,6 +200,12 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 				}
 			}
 		}, 0);
+		refreshLayout.setOnRefreshListener(()->{
+			if(!onlyMentions && !onlyPosts && getParentFragment() instanceof NotificationsFragment nf){
+				nf.markAsRead();
+				onRefresh();
+			}
+		});
 	}
 
 	@Override
@@ -341,8 +347,7 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 	public void onRefresh(){
 		super.onRefresh();
 		if (getParentFragment() instanceof NotificationsFragment nf) {
-			if (!onlyMentions && !onlyPosts) nf.markAsRead();
-			else AccountSessionManager.get(accountID).reloadNotificationsMarker(m->{
+			AccountSessionManager.get(accountID).reloadNotificationsMarker(m->{
 				nf.unreadMarker=nf.realUnreadMarker=m;
 				nf.updateMarkAllReadButton();
 			});
