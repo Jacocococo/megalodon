@@ -31,7 +31,7 @@
 	<application
 		android:name=".MastodonApp"
 		android:allowBackup="true"
-		android:label="@string/mo_app_name"
+		android:label="Shrimped Moshidon"
 		android:dataExtractionRules="@xml/backup_rules"
 		android:supportsRtl="true"
 		android:localeConfig="@xml/locales_config"
