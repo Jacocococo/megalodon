@@ -82,10 +82,12 @@ public class AccountSessionManager{
 
 	public static String getRedirectURI() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("moshidon-android-");
 		if (BuildConfig.BUILD_TYPE.equals("debug") || BuildConfig.BUILD_TYPE.equals("nightly")) {
+			builder.append("moshidon-android-");
 			builder.append(BuildConfig.BUILD_TYPE);
 			builder.append('-');
+		} else {
+			builder.append("moshidon-shrimped-android-");
 		}
 		builder.append("auth://callback");
 		return builder.toString();
