@@ -169,7 +169,6 @@ public class EmojiReactionsStatusDisplayItem extends StatusDisplayItem {
 
         @Override
         public void onBind(EmojiReactionsStatusDisplayItem item) {
-			if(emojiKeyboard != null) root.removeView(emojiKeyboard.getView());
 			addButton.setSelected(false);
 			AccountSession session=item.parentFragment.getSession();
 			item.status.reactions.forEach(r->r.request=r.getUrl(item.playGifs)!=null
@@ -178,14 +177,7 @@ public class EmojiReactionsStatusDisplayItem extends StatusDisplayItem {
 			addButton.setVisibility(session.getLocalPreferences().newEmojiReactionButton != AccountLocalPreferences.NewEmojiReactionButton.WITH_REACTIONS
 					? View.GONE
 					: View.VISIBLE);
-			emojiKeyboard=new CustomEmojiPopupKeyboard(
-					(Activity) item.parentFragment.getContext(),
-					item.accountID,
-					AccountSessionManager.getInstance().getCustomEmojis(session.domain),
-					session.domain, true);
-			emojiKeyboard.setListener(this);
 			space.setVisibility(View.GONE);
-			root.addView(emojiKeyboard.getView());
 			boolean hidden=item.isHidden();
 			root.setVisibility(hidden ? View.GONE : View.VISIBLE);
 			line.setVisibility(hidden ? View.GONE : View.VISIBLE);
@@ -269,6 +261,16 @@ public class EmojiReactionsStatusDisplayItem extends StatusDisplayItem {
 		public void onBackspace() {}
 
 		private void onReactClick(View v){
+			if(emojiKeyboard==null){
+				AccountSession session=item.parentFragment.getSession();
+				emojiKeyboard=new CustomEmojiPopupKeyboard(
+						(Activity) item.parentFragment.getContext(),
+						item.accountID,
+						AccountSessionManager.getInstance().getCustomEmojis(session.domain),
+						session.domain, true);
+				emojiKeyboard.setListener(this);
+				root.addView(emojiKeyboard.getView());
+			}
 			emojiKeyboard.toggleKeyboardPopup(null);
 			v.setSelected(emojiKeyboard.isVisible());
 			space.setVisibility(emojiKeyboard.isVisible() ? View.VISIBLE : View.GONE);

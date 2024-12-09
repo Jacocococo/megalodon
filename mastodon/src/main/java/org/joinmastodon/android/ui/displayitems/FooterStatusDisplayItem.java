@@ -184,15 +184,6 @@ public class FooterStatusDisplayItem extends StatusDisplayItem{
 				((FrameLayout) react.getParent()).setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1));
 				share.setVisibility(View.VISIBLE);
 			}
-
-			emojiKeyboard=new CustomEmojiPopupKeyboard(
-					(Activity) item.parentFragment.getContext(),
-					item.accountID,
-					AccountSessionManager.getInstance().getCustomEmojis(session.domain),
-					session.domain, true);
-			emojiKeyboard.setListener(this);
-			emojiKeyboardContainer.removeAllViews();
-			emojiKeyboardContainer.addView(emojiKeyboard.getView());
 		}
 
 		private void bindText(TextView btn, long count){
@@ -401,6 +392,17 @@ public class FooterStatusDisplayItem extends StatusDisplayItem{
 		}
 
 		private void onReactClick(View v){
+			if(emojiKeyboard==null){
+				AccountSession session=item.parentFragment.getSession();
+				emojiKeyboard=new CustomEmojiPopupKeyboard(
+						(Activity) item.parentFragment.getContext(),
+						item.accountID,
+						AccountSessionManager.getInstance().getCustomEmojis(session.domain),
+						session.domain, true);
+				emojiKeyboard.setListener(this);
+				emojiKeyboardContainer.removeAllViews();
+				emojiKeyboardContainer.addView(emojiKeyboard.getView());
+			}
 			emojiKeyboard.toggleKeyboardPopup(null);
 			if(!emojiKeyboard.isVisible()){
 				endEmojiReaction();
