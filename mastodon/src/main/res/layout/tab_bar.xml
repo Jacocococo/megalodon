@@ -112,7 +112,9 @@
 			android:paddingTop="12dp"
 			android:paddingBottom="16dp"
 			android:tooltipText="@string/sk_tab_notifications"
-			android:orientation="vertical">
+			android:orientation="vertical"
+			android:clipChildren="false"
+			android:clipToPadding="false">
 
 			<RelativeLayout
 				android:id="@+id/tab_notifications_pill"
