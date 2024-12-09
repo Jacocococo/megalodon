@@ -11,6 +11,7 @@ public class Relationship extends BaseModel{
 	public boolean requested;
 	public boolean endorsed;
 	public boolean followedBy;
+	public boolean requestedBy;
 	public boolean muting;
 	public boolean mutingNotifications;
 	public boolean showingReblogs;
@@ -32,6 +33,7 @@ public class Relationship extends BaseModel{
 				", requested="+requested+
 				", endorsed="+endorsed+
 				", followedBy="+followedBy+
+				", requestedBy="+requestedBy+
 				", muting="+muting+
 				", mutingNotifications="+mutingNotifications+
 				", showingReblogs="+showingReblogs+

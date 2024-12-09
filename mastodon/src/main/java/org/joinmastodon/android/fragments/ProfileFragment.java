@@ -1025,7 +1025,11 @@ public class ProfileFragment extends LoaderFragment implements OnBackPressedList
 		actionProgress.setIndeterminateTintList(actionButton.getTextColors());
 		notifyProgress.setIndeterminateTintList(notifyButton.getTextColors());
 		noteSaveProgress.setIndeterminateTintList(noteEdit.getTextColors());
-		followsYouView.setVisibility(relationship.followedBy ? View.VISIBLE : View.GONE);
+		if(relationship.followedBy)
+			followsYouView.setText(R.string.follows_you);
+		else if(relationship.requestedBy)
+			followsYouView.setText(R.string.sk_requested_to_follow_you);
+		followsYouView.setVisibility(relationship.followedBy || relationship.requestedBy ? View.VISIBLE : View.GONE);
 		notifyButton.setSelected(relationship.notifying);
 		notifyButton.setContentDescription(getString(relationship.notifying ? R.string.sk_user_post_notifications_on : R.string.sk_user_post_notifications_off, '@'+account.username));
 		noteEdit.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);

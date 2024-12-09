@@ -43,6 +43,7 @@
     <string name="sk_follow_requests">Follow requests</string>
     <string name="sk_accept_follow_request">Accept follow request</string>
     <string name="sk_reject_follow_request">Reject follow request</string>
+    <string name="sk_requested_to_follow_you">Requested to follow you</string>
     <string name="sk_lists_with_user">Lists with %s</string>
     <string name="sk_settings_always_reveal_content_warnings">Always reveal content warnings</string>
     <string name="sk_settings_enable_marquee">Enable scrolling text in title bars</string>
