@@ -87,7 +87,7 @@ public class FollowRequestsListFragment extends MastodonRecyclerFragment<FollowR
 							nextMaxID=result.nextPageUri.getQueryParameter("max_id");
 						else
 							nextMaxID=null;
-						onDataLoaded(result.stream().map(AccountWrapper::new).collect(Collectors.toList()), false);
+						onDataLoaded(result.stream().map(AccountWrapper::new).collect(Collectors.toList()), nextMaxID!=null);
 						loadRelationships();
 					}
 				})
