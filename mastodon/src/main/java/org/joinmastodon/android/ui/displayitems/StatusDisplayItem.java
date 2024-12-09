@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 
+import org.joinmastodon.android.GlobalUserPreferences;
 import org.joinmastodon.android.R;
 import org.joinmastodon.android.api.session.AccountLocalPreferences;
 import org.joinmastodon.android.api.session.AccountSessionManager;
@@ -293,7 +294,7 @@ public abstract class StatusDisplayItem{
 		if(statusForContent.poll!=null){
 			buildPollItems(parentID, fragment, statusForContent.poll, status, contentItems);
 		}
-		if(statusForContent.card!=null && statusForContent.mediaAttachments.isEmpty() && statusForContent.quote==null && !statusForContent.card.isHashtagUrl(statusForContent.url)){
+		if(GlobalUserPreferences.showCards && statusForContent.card!=null && statusForContent.mediaAttachments.isEmpty() && statusForContent.quote==null && !statusForContent.card.isHashtagUrl(statusForContent.url)){
 			contentItems.add(new LinkCardStatusDisplayItem(parentID, fragment, statusForContent));
 		}
 		if(statusForContent.quote!=null && (flags & FLAG_INSET)==0){

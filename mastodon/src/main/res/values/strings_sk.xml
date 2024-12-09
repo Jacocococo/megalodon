@@ -300,6 +300,7 @@
     <string name="sk_expand">Expand</string>
     <string name="sk_collapse">Collapse</string>
     <string name="sk_settings_collapse_long_posts">Collapse very long posts</string>
+    <string name="sk_settings_show_cards">Show link cards in posts</string>
     <string name="sk_unfinished_attachments">Uploading attachments</string>
     <string name="sk_unfinished_attachments_message">Some attachments haven’t finished uploading.</string>
     <string name="sk_settings_hide_interaction">Hide interaction buttons</string>

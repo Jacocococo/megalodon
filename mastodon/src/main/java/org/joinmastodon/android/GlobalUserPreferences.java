@@ -61,6 +61,7 @@ public class GlobalUserPreferences{
 	public static boolean underlinedLinks;
 	public static ColorPreference color;
 	public static boolean likeIcon;
+	public static boolean showCards;
 
 	private static SharedPreferences getPrefs(){
 		return MastodonApp.context.getSharedPreferences("global", Context.MODE_PRIVATE);
@@ -122,6 +123,7 @@ public class GlobalUserPreferences{
 		underlinedLinks=prefs.getBoolean("underlinedLinks", true);
 		color=ColorPreference.valueOf(prefs.getString("color", MATERIAL3.name()));
 		likeIcon=prefs.getBoolean("likeIcon", false);
+		showCards=prefs.getBoolean("showCards", true);
 
 		if (prefs.contains("prefixRepliesWithRe")) {
 			prefixReplies = prefs.getBoolean("prefixRepliesWithRe", false)
@@ -179,6 +181,7 @@ public class GlobalUserPreferences{
 				.putBoolean("underlinedLinks", underlinedLinks)
 				.putString("color", color.name())
 				.putBoolean("likeIcon", likeIcon)
+				.putBoolean("showCards", showCards)
 				.apply();
 	}
 
