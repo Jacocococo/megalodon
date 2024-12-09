@@ -353,19 +353,7 @@ public class ComposeFragment extends MastodonToolbarFragment implements OnBackPr
 		sensitiveBtn=view.findViewById(R.id.sensitive_item);
 		replyText=view.findViewById(R.id.reply_text);
 
-		if (UiUtils.isPhotoPickerAvailable()) {
-			PopupMenu attachPopup = new PopupMenu(getContext(), mediaBtn);
-			attachPopup.inflate(R.menu.attach);
-			attachPopup.setOnMenuItemClickListener(i -> {
-				openFilePicker(i.getItemId() == R.id.media);
-				return true;
-			});
-			UiUtils.enablePopupMenuIcons(getContext(), attachPopup);
-			mediaBtn.setOnClickListener(v->attachPopup.show());
-			mediaBtn.setOnTouchListener(attachPopup.getDragToOpenListener());
-		} else {
-			mediaBtn.setOnClickListener(v -> openFilePicker(false));
-		}
+		mediaBtn.setOnClickListener(v -> openFilePicker(false));
 		if (isInstancePixelfed()) pollBtn.setVisibility(View.GONE);
 		pollBtn.setOnClickListener(v->togglePoll());
 		emojiBtn.setOnClickListener(v->emojiKeyboard.toggleKeyboardPopup(mainEditText));
