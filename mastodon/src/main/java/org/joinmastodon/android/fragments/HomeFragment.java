@@ -333,11 +333,10 @@ public class HomeFragment extends AppKitFragment implements OnBackPressedListene
 	@SuppressLint("DefaultLocale")
 	public void updateUnreadCount(List<Notification> notifications, String marker){
 		if(notifications.isEmpty() || ObjectIdComparator.INSTANCE.compare(notifications.get(0).id, marker)<=0){
-			V.setVisibilityAnimated(notificationsBadge, View.GONE);
+			updateUnreadCount(0, false);
 		}else{
-			V.setVisibilityAnimated(notificationsBadge, View.VISIBLE);
 			if(ObjectIdComparator.INSTANCE.compare(notifications.get(notifications.size()-1).id, marker)>0){
-				notificationsBadge.setText(String.format("%d+", notifications.size()));
+				updateUnreadCount(notifications.size(), true);
 			}else{
 				int count=0;
 				for(Notification n:notifications){
@@ -345,8 +344,18 @@ public class HomeFragment extends AppKitFragment implements OnBackPressedListene
 						break;
 					count++;
 				}
-				notificationsBadge.setText(String.format("%d", count));
+				updateUnreadCount(count, false);
 			}
+		}
+	}
+
+	@SuppressLint("DefaultLocale")
+	public void updateUnreadCount(int count, boolean more){
+		if(count<=0){
+			V.setVisibilityAnimated(notificationsBadge, View.GONE);
+		}else{
+			V.setVisibilityAnimated(notificationsBadge, View.VISIBLE);
+			notificationsBadge.setText(String.format(more ? "%d+" : "%d", count));
 		}
 	}
 

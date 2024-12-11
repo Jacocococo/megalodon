@@ -27,6 +27,7 @@ import org.joinmastodon.android.model.FilterContext;
 import org.joinmastodon.android.model.FilterResult;
 import org.joinmastodon.android.model.Instance;
 import org.joinmastodon.android.model.LegacyFilter;
+import org.joinmastodon.android.model.Marker;
 import org.joinmastodon.android.model.Preferences;
 import org.joinmastodon.android.model.PushSubscription;
 import org.joinmastodon.android.model.Status;
@@ -159,7 +160,7 @@ public class AccountSession{
 		return prefs;
 	}
 
-	public void reloadNotificationsMarker(Consumer<String> callback){
+	public void reloadNotificationsMarker(Consumer<Marker> callback){
 		new GetMarkers()
 				.setCallback(new Callback<>(){
 					@Override
@@ -173,7 +174,7 @@ public class AccountSession{
 								id=lastKnown;
 								new SaveMarkers(null, id).exec(getID());
 							}
-							callback.accept(id);
+							callback.accept(result.notifications);
 							setNotificationsMarker(id, false);
 						}
 					}
@@ -191,6 +192,14 @@ public class AccountSession{
 	public void setNotificationsMarker(String id, boolean clearUnread){
 		getRawLocalPreferences().edit().putString("notificationsMarker", id).apply();
 		E.post(new NotificationsMarkerUpdatedEvent(getID(), id, clearUnread));
+	}
+
+	public int getLastKnownUnreadNotificationsCount(){
+		return getRawLocalPreferences().getInt("unreadNotificationsCount", -1);
+	}
+
+	public void setLastKnownUnreadNotificationsCount(int count){
+		getRawLocalPreferences().edit().putInt("unreadNotificationsCount", count).apply();
 	}
 
 	public void logOut(Activity activity, Runnable onDone){

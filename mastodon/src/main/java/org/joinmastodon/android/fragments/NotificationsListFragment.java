@@ -51,6 +51,7 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 	private String maxID;
 	private boolean reloadingFromCache, markerLoaded;
 	private DiscoverInfoBannerHelper bannerHelper;
+	private int accurateUnreadCount=-1;
 
 	@Override
 	protected boolean wantsComposeButton() {
@@ -127,7 +128,11 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 		dataLoading=true;
 		if(offset==0 && !reloadingFromCache && !(onlyMentions || onlyPosts) && getParentFragment() instanceof NotificationsFragment nf){
 			AccountSessionManager.get(accountID).reloadNotificationsMarker(m->{
-				nf.unreadMarker=m;
+				nf.unreadMarker=m.lastReadId;
+				if(m.pleroma!=null){
+					accurateUnreadCount=m.pleroma.unreadCount;
+					getSession().setLastKnownUnreadNotificationsCount(accurateUnreadCount);
+				}
 				if(!dataLoading){
 					updateUnreadCount();
 				}else{
@@ -159,7 +164,10 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 
 	private void updateUnreadCount() {
 		if(getParentFragment() instanceof NotificationsFragment nf && nf.getParentFragment() instanceof HomeFragment hf){
-			hf.updateUnreadCount(data, nf.unreadMarker);
+			if(accurateUnreadCount!=-1)
+				hf.updateUnreadCount(accurateUnreadCount, false);
+			else
+				hf.updateUnreadCount(data, nf.unreadMarker);
 			nf.updateMarkAllReadButton();
 		}
 		if(reloadingFromCache){
@@ -172,6 +180,7 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 	@Override
 	protected void onShown(){
 		super.onShown();
+		accurateUnreadCount=getSession().getLastKnownUnreadNotificationsCount();
 		if(!dataLoading){
 			if(onlyMentions){
 				refresh();

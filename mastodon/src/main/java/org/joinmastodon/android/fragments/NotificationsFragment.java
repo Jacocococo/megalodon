@@ -27,6 +27,7 @@ import org.joinmastodon.android.R;
 import org.joinmastodon.android.api.requests.accounts.GetFollowRequests;
 import org.joinmastodon.android.api.requests.markers.SaveMarkers;
 import org.joinmastodon.android.api.requests.notifications.PleromaMarkNotificationsRead;
+import org.joinmastodon.android.api.session.AccountSession;
 import org.joinmastodon.android.api.session.AccountSessionManager;
 import org.joinmastodon.android.events.FollowRequestHandledEvent;
 import org.joinmastodon.android.model.Account;
@@ -129,7 +130,9 @@ public class NotificationsFragment extends MastodonToolbarFragment implements Sc
 			if (allNotificationsFragment.isInstanceAkkoma()) {
 				new PleromaMarkNotificationsRead(id).exec(accountID);
 			}
-			AccountSessionManager.get(accountID).setNotificationsMarker(id, true);
+			AccountSession session=AccountSessionManager.get(accountID);
+			session.setNotificationsMarker(id, true);
+			session.setLastKnownUnreadNotificationsCount(0);
 			unreadMarker=id;
 			updateMarkAllReadButton();
 		}
