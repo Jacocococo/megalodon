@@ -330,38 +330,8 @@ public class HomeFragment extends AppKitFragment implements OnBackPressedListene
 		if (profileFragment.isAdded()) getChildFragmentManager().putFragment(outState, "profileFragment", profileFragment);
 	}
 
-	@Override
-	protected void onShown(){
-		super.onShown();
-		reloadNotificationsForUnreadCount();
-	}
-
-	public void reloadNotificationsForUnreadCount(){
-		List<Notification>[] notifications=new List[]{null};
-		String[] marker={null};
-
-		AccountSessionManager.get(accountID).reloadNotificationsMarker(m->{
-			marker[0]=m;
-			if(notifications[0]!=null){
-				updateUnreadCount(notifications[0], marker[0]);
-			}
-		});
-
-		AccountSessionManager.get(accountID).getCacheController().getNotifications(null, 40, false, false, true, new Callback<>(){
-			@Override
-			public void onSuccess(PaginatedResponse<List<Notification>> result){
-				notifications[0]=result.items;
-				if(marker[0]!=null)
-					updateUnreadCount(notifications[0], marker[0]);
-			}
-
-			@Override
-			public void onError(ErrorResponse error){}
-		});
-	}
-
 	@SuppressLint("DefaultLocale")
-	private void updateUnreadCount(List<Notification> notifications, String marker){
+	public void updateUnreadCount(List<Notification> notifications, String marker){
 		if(notifications.isEmpty() || ObjectIdComparator.INSTANCE.compare(notifications.get(0).id, marker)<=0){
 			V.setVisibilityAnimated(notificationsBadge, View.GONE);
 		}else{

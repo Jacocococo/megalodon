@@ -30,7 +30,6 @@ import org.joinmastodon.android.ui.displayitems.NotificationHeaderStatusDisplayI
 import org.joinmastodon.android.ui.displayitems.StatusDisplayItem;
 import org.joinmastodon.android.ui.displayitems.TextStatusDisplayItem;
 import org.joinmastodon.android.ui.utils.DiscoverInfoBannerHelper;
-import org.joinmastodon.android.ui.utils.InsetStatusItemDecoration;
 import org.joinmastodon.android.ui.utils.UiUtils;
 import org.joinmastodon.android.utils.ObjectIdComparator;
 import org.parceler.Parcels;
@@ -50,7 +49,7 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 	private boolean onlyMentions;
 	private boolean onlyPosts;
 	private String maxID;
-	private boolean reloadingFromCache;
+	private boolean reloadingFromCache, markerLoaded;
 	private DiscoverInfoBannerHelper bannerHelper;
 
 	@Override
@@ -125,6 +124,17 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 
 	@Override
 	protected void doLoadData(int offset, int count){
+		dataLoading=true;
+		if(offset==0 && !reloadingFromCache && !(onlyMentions || onlyPosts) && getParentFragment() instanceof NotificationsFragment nf){
+			AccountSessionManager.get(accountID).reloadNotificationsMarker(m->{
+				nf.unreadMarker=m;
+				if(!dataLoading){
+					updateUnreadCount();
+				}else{
+					markerLoaded=true;
+				}
+			});
+		}
 		AccountSessionManager.getInstance()
 				.getAccount(accountID).getCacheController()
 				.getNotifications(offset>0 ? maxID : null, count, onlyMentions, onlyPosts, refreshing && !reloadingFromCache, new SimpleCallback<>(this){
@@ -135,12 +145,27 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 						maxID=result.maxID;
 						onDataLoaded(result.items.stream().filter(n->n.type!=null).collect(Collectors.toList()), !result.items.isEmpty());
 						if(bannerHelper!=null) bannerHelper.onBannerBecameVisible();
-						reloadingFromCache=false;
-						if (getParentFragment() instanceof NotificationsFragment nf) {
-							nf.updateMarkAllReadButton();
+						if((offset>0 || markerLoaded || reloadingFromCache) && !(onlyMentions || onlyPosts)){
+							updateUnreadCount();
+							markerLoaded=false;
+						}else {
+							reloadingFromCache=false;
+							if(getParentFragment() instanceof NotificationsFragment nf)
+								nf.updateMarkAllReadButton();
 						}
 					}
 				});
+	}
+
+	private void updateUnreadCount() {
+		if(getParentFragment() instanceof NotificationsFragment nf && nf.getParentFragment() instanceof HomeFragment hf){
+			hf.updateUnreadCount(data, nf.unreadMarker);
+			nf.updateMarkAllReadButton();
+		}
+		if(reloadingFromCache){
+			reloadingFromCache=false;
+			refresh();
+		}
 	}
 
 	@Override
@@ -203,8 +228,8 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 		refreshLayout.setOnRefreshListener(()->{
 			if(!onlyMentions && !onlyPosts && getParentFragment() instanceof NotificationsFragment nf){
 				nf.markAsRead();
-				onRefresh();
 			}
+			onRefresh();
 		});
 	}
 
@@ -337,21 +362,12 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 	}
 
 	void resetUnreadBackground(){
-		if (getParentFragment() instanceof NotificationsFragment nf) {
-			nf.unreadMarker=nf.realUnreadMarker;
-			list.invalidate();
-		}
+		list.invalidate();
 	}
 
 	@Override
 	public void onRefresh(){
 		super.onRefresh();
-		if (getParentFragment() instanceof NotificationsFragment nf) {
-			AccountSessionManager.get(accountID).reloadNotificationsMarker(m->{
-				nf.unreadMarker=nf.realUnreadMarker=m;
-				nf.updateMarkAllReadButton();
-			});
-		}
 		resetUnreadBackground();
 	}
 

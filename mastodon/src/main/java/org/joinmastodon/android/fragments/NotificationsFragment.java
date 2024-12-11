@@ -53,7 +53,7 @@ public class NotificationsFragment extends MastodonToolbarFragment implements Sc
 	private FrameLayout[] tabViews;
 	private View tabsDivider;
 	private TabLayoutMediator tabLayoutMediator;
-	String unreadMarker, realUnreadMarker;
+	String unreadMarker;
 	private MenuItem markAllReadItem;
 	private NotificationsListFragment allNotificationsFragment, mentionsFragment;
 	private ElevationOnScrollListener elevationOnScrollListener;
@@ -85,7 +85,7 @@ public class NotificationsFragment extends MastodonToolbarFragment implements Sc
 	@Override
 	public void onShown() {
 		super.onShown();
-		unreadMarker=realUnreadMarker=AccountSessionManager.get(accountID).getLastKnownNotificationsMarker();
+		unreadMarker=AccountSessionManager.get(accountID).getLastKnownNotificationsMarker();
 	}
 
 	@Override
@@ -124,19 +124,19 @@ public class NotificationsFragment extends MastodonToolbarFragment implements Sc
 	void markAsRead(){
 		if(allNotificationsFragment.getData().isEmpty()) return;
 		String id=allNotificationsFragment.getData().get(0).id;
-		if(ObjectIdComparator.INSTANCE.compare(id, realUnreadMarker)>0){
+		if(ObjectIdComparator.INSTANCE.compare(id, unreadMarker)>0){
 			new SaveMarkers(null, id).exec(accountID);
 			if (allNotificationsFragment.isInstanceAkkoma()) {
 				new PleromaMarkNotificationsRead(id).exec(accountID);
 			}
 			AccountSessionManager.get(accountID).setNotificationsMarker(id, true);
-			realUnreadMarker=id;
+			unreadMarker=id;
 			updateMarkAllReadButton();
 		}
 	}
 
 	public void updateMarkAllReadButton(){
-		markAllReadItem.setVisible(!allNotificationsFragment.getData().isEmpty() && realUnreadMarker!=null && !realUnreadMarker.equals(allNotificationsFragment.getData().get(0).id));
+		markAllReadItem.setVisible(!allNotificationsFragment.getData().isEmpty() && unreadMarker!=null && !unreadMarker.equals(allNotificationsFragment.getData().get(0).id));
 	}
 
 	@Override
