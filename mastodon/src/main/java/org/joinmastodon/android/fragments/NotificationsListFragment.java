@@ -164,7 +164,8 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 		}
 		if(reloadingFromCache){
 			reloadingFromCache=false;
-			refresh();
+			if(GlobalUserPreferences.loadNewPosts)
+				refresh();
 		}
 	}
 
