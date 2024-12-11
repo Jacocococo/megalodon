@@ -14,14 +14,17 @@ import com.squareup.otto.Subscribe;
 import org.joinmastodon.android.E;
 import org.joinmastodon.android.GlobalUserPreferences;
 import org.joinmastodon.android.R;
+import org.joinmastodon.android.api.requests.notifications.GetUnreadNotificationsCount;
 import org.joinmastodon.android.api.session.AccountSessionManager;
 import org.joinmastodon.android.events.EmojiReactionsUpdatedEvent;
 import org.joinmastodon.android.events.PollUpdatedEvent;
 import org.joinmastodon.android.events.RemoveAccountPostsEvent;
 import org.joinmastodon.android.events.StatusCountersUpdatedEvent;
+import org.joinmastodon.android.model.Instance;
 import org.joinmastodon.android.model.Notification;
 import org.joinmastodon.android.model.PaginatedResponse;
 import org.joinmastodon.android.model.Status;
+import org.joinmastodon.android.model.UnreadNotificationsCount;
 import org.joinmastodon.android.ui.displayitems.AccountCardStatusDisplayItem;
 import org.joinmastodon.android.ui.displayitems.EmojiReactionsStatusDisplayItem;
 import org.joinmastodon.android.ui.displayitems.ExtendedFooterStatusDisplayItem;
@@ -42,6 +45,8 @@ import java.util.stream.Stream;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import me.grishka.appkit.api.Callback;
+import me.grishka.appkit.api.ErrorResponse;
 import me.grishka.appkit.api.SimpleCallback;
 import me.grishka.appkit.utils.MergeRecyclerAdapter;
 
@@ -52,6 +57,7 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 	private boolean reloadingFromCache, markerLoaded;
 	private DiscoverInfoBannerHelper bannerHelper;
 	private int accurateUnreadCount=-1;
+	private boolean shouldAwaitUnreadCount, unreadCountLoaded;
 
 	@Override
 	protected boolean wantsComposeButton() {
@@ -126,6 +132,34 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 	@Override
 	protected void doLoadData(int offset, int count){
 		dataLoading=true;
+
+		// mastodon v2 unread count endpoint
+		if(offset==0 && !(onlyMentions || onlyPosts)){
+			Instance instance=getInstance().get();
+			if(instance.v2!=null && instance.v2.apiVersions!=null && instance.v2.apiVersions.mastodon>=2 && !instance.isAkkoma()){
+				shouldAwaitUnreadCount=true;
+				if(!reloadingFromCache)
+					new GetUnreadNotificationsCount()
+							.setCallback(new Callback<>(){
+								@Override
+								public void onSuccess(UnreadNotificationsCount result){
+									accurateUnreadCount=result.count;
+									getSession().setLastKnownUnreadNotificationsCount(accurateUnreadCount);
+									if(!dataLoading && markerLoaded){
+										updateUnreadCount();
+									}else{
+										unreadCountLoaded=true;
+									}
+								}
+
+								@Override
+								public void onError(ErrorResponse error){}
+							})
+							.exec(getAccountID());
+			}
+		}
+
+		// markers, also containing Pleroma unread count
 		if(offset==0 && !reloadingFromCache && !(onlyMentions || onlyPosts) && getParentFragment() instanceof NotificationsFragment nf){
 			AccountSessionManager.get(accountID).reloadNotificationsMarker(m->{
 				nf.unreadMarker=m.lastReadId;
@@ -133,13 +167,15 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 					accurateUnreadCount=m.pleroma.unreadCount;
 					getSession().setLastKnownUnreadNotificationsCount(accurateUnreadCount);
 				}
-				if(!dataLoading){
+				if(!dataLoading && (!shouldAwaitUnreadCount || unreadCountLoaded)){
 					updateUnreadCount();
 				}else{
 					markerLoaded=true;
 				}
 			});
 		}
+
+		// notifications content
 		AccountSessionManager.getInstance()
 				.getAccount(accountID).getCacheController()
 				.getNotifications(offset>0 ? maxID : null, count, onlyMentions, onlyPosts, refreshing && !reloadingFromCache, new SimpleCallback<>(this){
@@ -150,9 +186,8 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 						maxID=result.maxID;
 						onDataLoaded(result.items.stream().filter(n->n.type!=null).collect(Collectors.toList()), !result.items.isEmpty());
 						if(bannerHelper!=null) bannerHelper.onBannerBecameVisible();
-						if((offset>0 || markerLoaded || reloadingFromCache) && !(onlyMentions || onlyPosts)){
+						if((offset>0 || (markerLoaded && (!shouldAwaitUnreadCount || unreadCountLoaded)) || reloadingFromCache) && !(onlyMentions || onlyPosts)){
 							updateUnreadCount();
-							markerLoaded=false;
 						}else {
 							reloadingFromCache=false;
 							if(getParentFragment() instanceof NotificationsFragment nf)
@@ -163,9 +198,11 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 	}
 
 	private void updateUnreadCount() {
+		markerLoaded=false;
+		unreadCountLoaded=false;
 		if(getParentFragment() instanceof NotificationsFragment nf && nf.getParentFragment() instanceof HomeFragment hf){
 			if(accurateUnreadCount!=-1)
-				hf.updateUnreadCount(accurateUnreadCount, false);
+				hf.updateUnreadCount(accurateUnreadCount, shouldAwaitUnreadCount && (accurateUnreadCount==100)); // 100 is default max so it is unknown if it's higher
 			else
 				hf.updateUnreadCount(data, nf.unreadMarker);
 			nf.updateMarkAllReadButton();

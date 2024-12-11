@@ -222,6 +222,7 @@ public class Instance extends BaseModel{
 	@Parcel
 	public static class V2 extends BaseModel {
 		public V2.Configuration configuration;
+		public V2.ApiVersions apiVersions;
 
 		@Parcel
 		public static class Configuration {
@@ -231,6 +232,11 @@ public class Instance extends BaseModel{
 		@Parcel
 		public static class TranslationConfiguration{
 			public boolean enabled;
+		}
+
+		@Parcel
+		public static class ApiVersions{
+			public int mastodon;
 		}
 	}
 
