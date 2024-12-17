@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.text.TextUtils;
 import android.util.Log;
 
 import org.joinmastodon.android.E;
@@ -16,8 +15,6 @@ import org.joinmastodon.android.api.PushSubscriptionManager;
 import org.joinmastodon.android.api.StatusInteractionController;
 import org.joinmastodon.android.api.requests.accounts.GetPreferences;
 import org.joinmastodon.android.api.requests.accounts.UpdateAccountCredentialsPreferences;
-import org.joinmastodon.android.api.requests.markers.GetMarkers;
-import org.joinmastodon.android.api.requests.markers.SaveMarkers;
 import org.joinmastodon.android.api.requests.oauth.RevokeOauthToken;
 import org.joinmastodon.android.events.NotificationsMarkerUpdatedEvent;
 import org.joinmastodon.android.model.Account;
@@ -27,13 +24,10 @@ import org.joinmastodon.android.model.FilterContext;
 import org.joinmastodon.android.model.FilterResult;
 import org.joinmastodon.android.model.Instance;
 import org.joinmastodon.android.model.LegacyFilter;
-import org.joinmastodon.android.model.Marker;
 import org.joinmastodon.android.model.Preferences;
 import org.joinmastodon.android.model.PushSubscription;
 import org.joinmastodon.android.model.Status;
-import org.joinmastodon.android.model.TimelineMarkers;
 import org.joinmastodon.android.model.Token;
-import org.joinmastodon.android.utils.ObjectIdComparator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -164,16 +158,15 @@ public class AccountSession{
 		return getRawLocalPreferences().getString("notificationsMarker", null);
 	}
 
-	public void setNotificationsMarker(String id, boolean clearUnread){
+	public void setNotificationsMarker(String id){
 		getRawLocalPreferences().edit().putString("notificationsMarker", id).apply();
-		E.post(new NotificationsMarkerUpdatedEvent(getID(), id, clearUnread));
 	}
 
 	public int getLastKnownUnreadNotificationsCount(){
 		return getRawLocalPreferences().getInt("unreadNotificationsCount", -1);
 	}
 
-	public void setLastKnownUnreadNotificationsCount(int count){
+	public void setUnreadNotificationsCount(int count){
 		getRawLocalPreferences().edit().putInt("unreadNotificationsCount", count).apply();
 	}
 

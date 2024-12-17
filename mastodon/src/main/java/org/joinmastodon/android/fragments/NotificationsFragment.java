@@ -133,8 +133,8 @@ public class NotificationsFragment extends MastodonToolbarFragment implements Sc
 		savingMarkers=false;
 
 		AccountSession session=getSession();
-		session.setNotificationsMarker(id, true);
-		session.setLastKnownUnreadNotificationsCount(0);
+		session.setNotificationsMarker(id);
+		session.setUnreadNotificationsCount(0);
 
 		if(refreshAfterSavingMarkers)
 			allNotificationsFragment.onRefresh();

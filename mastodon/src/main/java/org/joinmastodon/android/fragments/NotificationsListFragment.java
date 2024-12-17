@@ -60,7 +60,7 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 	private boolean reloadingFromCache, markerLoaded;
 	private DiscoverInfoBannerHelper bannerHelper;
 	private int accurateUnreadCount=-1;
-	private boolean shouldAwaitUnreadCount, unreadCountLoaded;
+	private boolean usesUnreadEndpoint, unreadCountLoaded;
 
 	@Override
 	protected boolean wantsComposeButton() {
@@ -78,6 +78,10 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 		if (onlyPosts) {
 			bannerHelper=new DiscoverInfoBannerHelper(DiscoverInfoBannerHelper.BannerType.POST_NOTIFICATIONS, accountID);
 		}
+
+		Instance instance=getInstance().get();
+		if(instance.v2!=null && instance.v2.apiVersions!=null && instance.v2.apiVersions.mastodon>=2 && !instance.isAkkoma())
+			usesUnreadEndpoint=true;
 	}
 
 	@Override
@@ -152,7 +156,7 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 						maxID=result.maxID;
 						onDataLoaded(result.items.stream().filter(n->n.type!=null).collect(Collectors.toList()), !result.items.isEmpty());
 						if(bannerHelper!=null) bannerHelper.onBannerBecameVisible();
-						if((offset>0 || (markerLoaded && (!shouldAwaitUnreadCount || unreadCountLoaded)) || reloadingFromCache) && !(onlyMentions || onlyPosts)){
+						if((offset>0 || (markerLoaded && (!usesUnreadEndpoint || unreadCountLoaded)) || reloadingFromCache) && !(onlyMentions || onlyPosts)){
 							updateUnreadCount();
 						}else {
 							reloadingFromCache=false;
@@ -162,34 +166,32 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 					}
 				});
 
-		// mastodon v2 unread count endpoint
-		if(offset==0 && !(onlyMentions || onlyPosts)){
-			Instance instance=getInstance().get();
-			if(instance.v2!=null && instance.v2.apiVersions!=null && instance.v2.apiVersions.mastodon>=2 && !instance.isAkkoma()){
-				shouldAwaitUnreadCount=true;
-				if(!reloadingFromCache)
-					new GetUnreadNotificationsCount()
-							.setCallback(new Callback<>(){
-								@Override
-								public void onSuccess(UnreadNotificationsCount result){
-									accurateUnreadCount=result.count;
-									getSession().setLastKnownUnreadNotificationsCount(accurateUnreadCount);
-									if(!dataLoading && markerLoaded){
-										updateUnreadCount();
-									}else{
-										unreadCountLoaded=true;
-									}
-								}
+		if(offset>0 || reloadingFromCache || onlyMentions || onlyPosts)
+			return;
 
-								@Override
-								public void onError(ErrorResponse error){}
-							})
-							.exec(getAccountID());
-			}
+		// mastodon v2 unread count endpoint
+		if(usesUnreadEndpoint){
+			new GetUnreadNotificationsCount()
+					.setCallback(new Callback<>(){
+						@Override
+						public void onSuccess(UnreadNotificationsCount result){
+							accurateUnreadCount=result.count;
+							getSession().setUnreadNotificationsCount(accurateUnreadCount);
+							if(!dataLoading && markerLoaded){
+								updateUnreadCount();
+							}else{
+								unreadCountLoaded=true;
+							}
+						}
+
+						@Override
+						public void onError(ErrorResponse error){}
+					})
+					.exec(getAccountID());
 		}
 
 		// markers, also containing Pleroma unread count
-		if(offset==0 && !reloadingFromCache && !(onlyMentions || onlyPosts) && getParentFragment() instanceof NotificationsFragment nf){
+		if(getParentFragment() instanceof NotificationsFragment nf){
 			new GetMarkers()
 					.setCallback(new Callback<>(){
 						@Override
@@ -199,13 +201,13 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 							Marker m=result.notifications;
 							if(ObjectIdComparator.INSTANCE.compare(m.lastReadId, nf.unreadMarker)>0){
 								nf.unreadMarker=m.lastReadId;
-								getSession().setNotificationsMarker(nf.unreadMarker, false);
+								getSession().setNotificationsMarker(nf.unreadMarker);
 							}
 							if(m.pleroma!=null){
 								accurateUnreadCount=m.pleroma.unreadCount;
-								getSession().setLastKnownUnreadNotificationsCount(accurateUnreadCount);
+								getSession().setUnreadNotificationsCount(accurateUnreadCount);
 							}
-							if(!dataLoading && (!shouldAwaitUnreadCount || unreadCountLoaded)){
+							if(!dataLoading && (!usesUnreadEndpoint || unreadCountLoaded)){
 								updateUnreadCount();
 							}else{
 								markerLoaded=true;
@@ -224,7 +226,7 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 		unreadCountLoaded=false;
 		if(getParentFragment() instanceof NotificationsFragment nf && nf.getParentFragment() instanceof HomeFragment hf){
 			if(accurateUnreadCount!=-1)
-				hf.updateUnreadCount(accurateUnreadCount, shouldAwaitUnreadCount && (accurateUnreadCount==100)); // 100 is default max so it is unknown if it's higher
+				hf.updateUnreadCount(accurateUnreadCount, usesUnreadEndpoint && (accurateUnreadCount==100)); // 100 is default max so it is unknown if it's higher
 			else
 				hf.updateUnreadCount(data, nf.unreadMarker);
 			nf.updateMarkAllReadButton();
