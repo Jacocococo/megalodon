@@ -331,12 +331,13 @@ public class HomeFragment extends AppKitFragment implements OnBackPressedListene
 	}
 
 	@SuppressLint("DefaultLocale")
-	public void updateUnreadCount(List<Notification> notifications, String marker){
+	public void updateUnreadCount(List<Notification> notifications, String marker, int estimateCount, boolean limitedEstimate){
 		if(notifications.isEmpty() || ObjectIdComparator.INSTANCE.compare(notifications.get(0).id, marker)<=0){
 			updateUnreadCount(0, false);
 		}else{
 			if(ObjectIdComparator.INSTANCE.compare(notifications.get(notifications.size()-1).id, marker)>0){
-				updateUnreadCount(notifications.size(), true);
+				boolean useEstimate=estimateCount>notifications.size();
+				updateUnreadCount(useEstimate ? estimateCount : notifications.size(), !useEstimate || limitedEstimate);
 			}else{
 				int count=0;
 				for(Notification n:notifications){

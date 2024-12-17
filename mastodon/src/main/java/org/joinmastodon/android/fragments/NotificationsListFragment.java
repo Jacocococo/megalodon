@@ -225,10 +225,10 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 		markerLoaded=false;
 		unreadCountLoaded=false;
 		if(getParentFragment() instanceof NotificationsFragment nf && nf.getParentFragment() instanceof HomeFragment hf){
-			if(accurateUnreadCount!=-1)
-				hf.updateUnreadCount(accurateUnreadCount, usesUnreadEndpoint && (accurateUnreadCount==100)); // 100 is default max so it is unknown if it's higher
+			if(accurateUnreadCount!=-1 && !usesUnreadEndpoint)
+				hf.updateUnreadCount(accurateUnreadCount, false);
 			else
-				hf.updateUnreadCount(data, nf.unreadMarker);
+				hf.updateUnreadCount(data, nf.unreadMarker, accurateUnreadCount, usesUnreadEndpoint && (accurateUnreadCount==100)); // 100 is default max so it is unknown if it's higher
 			nf.updateMarkAllReadButton();
 		}
 		if(reloadingFromCache){
