@@ -160,31 +160,6 @@ public class AccountSession{
 		return prefs;
 	}
 
-	public void reloadNotificationsMarker(Consumer<Marker> callback){
-		new GetMarkers()
-				.setCallback(new Callback<>(){
-					@Override
-					public void onSuccess(TimelineMarkers result){
-						if(result.notifications!=null && !TextUtils.isEmpty(result.notifications.lastReadId)){
-							String id=result.notifications.lastReadId;
-							String lastKnown=getLastKnownNotificationsMarker();
-							if(ObjectIdComparator.INSTANCE.compare(id, lastKnown)<0){
-								// Marker moved back -- previous marker update must have failed.
-								// Pretend it didn't happen and repeat the request.
-								id=lastKnown;
-								new SaveMarkers(null, id).exec(getID());
-							}
-							callback.accept(result.notifications);
-							setNotificationsMarker(id, false);
-						}
-					}
-
-					@Override
-					public void onError(ErrorResponse error){}
-				})
-				.exec(getID());
-	}
-
 	public String getLastKnownNotificationsMarker(){
 		return getRawLocalPreferences().getString("notificationsMarker", null);
 	}
