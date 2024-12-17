@@ -5,7 +5,7 @@ public class UnreadNotificationsCount{
 
 	@Override
 	public String toString(){
-		return "Marker{"+
+		return "UnreadNotificationsCount{"+
 				"count='"+count+
 				'}';
 	}
