@@ -340,7 +340,11 @@ public class HomeFragment extends AppKitFragment implements OnBackPressedListene
 			}else{
 				int count=0;
 				for(Notification n:notifications){
-					if(n.id.equals(marker))
+					// if the loop is still running when the id is less than
+					// the marker it means that the notification that the
+					// marker points to no longer exists. Hence the first
+					// one with an id lower than the marker is used instead
+					if(ObjectIdComparator.INSTANCE.compare(n.id, marker)<=0)
 						break;
 					count++;
 				}
