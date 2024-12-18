@@ -15,13 +15,26 @@
 		android:layout_height="64dp"
 		android:gravity="center_vertical">
 
-		<ImageView
-			android:id="@+id/icon"
+		<RelativeLayout
 			android:layout_width="28dp"
-			android:layout_height="28dp"
-			android:importantForAccessibility="no"
-			tools:tint="#0f0"
-			tools:src="@drawable/ic_fluent_arrow_repeat_all_24_filled"/>
+			android:layout_height="28dp">
+
+			<ImageView
+				android:id="@+id/icon"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:importantForAccessibility="no"
+				tools:tint="#0f0"
+				tools:src="@drawable/ic_fluent_arrow_repeat_all_24_filled"/>
+
+			<TextView
+				android:id="@+id/emoji"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:autoSizeTextType="uniform"
+				android:singleLine="true"/>
+		</RelativeLayout>
+
 
 		<ImageView
 			android:id="@+id/avatar"

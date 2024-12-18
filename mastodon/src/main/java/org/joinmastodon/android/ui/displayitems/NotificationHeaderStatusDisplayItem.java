@@ -42,7 +42,7 @@ import me.grishka.appkit.utils.V;
 
 public class NotificationHeaderStatusDisplayItem extends StatusDisplayItem{
 	public final Notification notification;
-	private ImageLoaderRequest avaRequest;
+	private ImageLoaderRequest avaRequest, emojiRequest;
 	private final String accountID;
 	private final CustomEmojiHelper emojiHelper=new CustomEmojiHelper();
 	private final CharSequence text;
@@ -73,24 +73,16 @@ public class NotificationHeaderStatusDisplayItem extends StatusDisplayItem{
 				case UPDATE -> R.string.sk_post_edited;
 				case SIGN_UP -> R.string.sk_signed_up;
 				case REPORT -> R.string.sk_reported;
-				case REACTION, PLEROMA_EMOJI_REACTION ->
-						!TextUtils.isEmpty(notification.emoji) ? R.string.sk_reacted_with : R.string.sk_reacted;
+				case REACTION, PLEROMA_EMOJI_REACTION -> R.string.sk_reacted;
 				default -> throw new IllegalStateException("Unexpected value: "+notification.type);
 			});
 
-			if (!TextUtils.isEmpty(notification.emoji)) {
-				SpannableStringBuilder emoji = new SpannableStringBuilder(notification.emoji);
-				if (!TextUtils.isEmpty(notification.emojiUrl)) {
-					HtmlParser.parseCustomEmoji(emoji, Collections.singletonList(new Emoji(
-							notification.emoji, notification.emojiUrl, notification.emojiUrl
-					)));
-				}
-				this.text = generateFormattedString(str, parsedName, emoji);
-			} else {
-				this.text = generateFormattedString(str, parsedName);
-			}
-
+			this.text = generateFormattedString(str, parsedName);
 			emojiHelper.setText(text);
+
+			if(!TextUtils.isEmpty(notification.emoji) && !TextUtils.isEmpty(notification.emojiUrl)){
+				emojiRequest=new UrlImageLoaderRequest(notification.emojiUrl, 0, V.dp(28));
+			}
 		}
 	}
 
@@ -101,20 +93,21 @@ public class NotificationHeaderStatusDisplayItem extends StatusDisplayItem{
 
 	@Override
 	public int getImageCount(){
-		return 1+emojiHelper.getImageCount();
+		return 1 + emojiHelper.getImageCount() + (emojiRequest!=null ? 1 : 0);
 	}
 
 	@Override
 	public ImageLoaderRequest getImageRequest(int index){
-		if(index>0){
+		if(index>emojiHelper.getImageCount())
+			return emojiRequest;
+		if(index>0)
 			return emojiHelper.getImageRequest(index-1);
-		}
 		return avaRequest;
 	}
 
 	public static class Holder extends StatusDisplayItem.Holder<NotificationHeaderStatusDisplayItem> implements ImageLoaderViewHolder{
 		private final ImageView icon, avatar, deleteNotification;
-		private final TextView text, timestamp;
+		private final TextView text, timestamp, emoji;
 		private final int selectableItemBackground;
 
 		public Holder(Activity activity, ViewGroup parent){
@@ -124,7 +117,10 @@ public class NotificationHeaderStatusDisplayItem extends StatusDisplayItem{
 			text=findViewById(R.id.text);
 			timestamp=findViewById(R.id.timestamp);
 			deleteNotification=findViewById(R.id.delete_notification);
+			emoji=findViewById(R.id.emoji);
 
+			icon.setOutlineProvider(OutlineProviders.roundedRect(8));
+			icon.setClipToOutline(true);
 			avatar.setOutlineProvider(OutlineProviders.roundedRect(8));
 			avatar.setClipToOutline(true);
 			deleteNotification.setOnClickListener(v->UiUtils.confirmDeleteNotification(activity, item.parentFragment.getAccountID(), item.notification, ()->{
@@ -143,6 +139,9 @@ public class NotificationHeaderStatusDisplayItem extends StatusDisplayItem{
 		public void setImage(int index, Drawable image){
 			if(index==0){
 				avatar.setImageDrawable(image);
+			}else if(index>item.emojiHelper.getImageCount()){
+				icon.setImageDrawable(image);
+				icon.setClipToOutline(false); // no rounded corners
 			}else{
 				item.emojiHelper.setImageDrawable(index-1, image);
 				text.setText(text.getText());
@@ -153,10 +152,14 @@ public class NotificationHeaderStatusDisplayItem extends StatusDisplayItem{
 
 		@Override
 		public void clearImage(int index){
-			if(index==0)
+			if(index==0){
 				avatar.setImageResource(R.drawable.image_placeholder);
-			else
+			}else if(index>item.emojiHelper.getImageCount()){
+				icon.setImageResource(R.drawable.image_placeholder);
+				icon.setClipToOutline(true); // rounded corners
+			}else{
 				ImageLoaderViewHolder.super.clearImage(index);
+			}
 		}
 
 		@SuppressLint("ResourceType")
@@ -176,12 +179,30 @@ public class NotificationHeaderStatusDisplayItem extends StatusDisplayItem{
 				case REACTION, PLEROMA_EMOJI_REACTION -> R.drawable.ic_fluent_add_24_filled;
 				default -> throw new IllegalStateException("Unexpected value: "+item.notification.type);
 			});
-			icon.setImageTintList(ColorStateList.valueOf(UiUtils.getThemeColor(item.parentFragment.getActivity(), switch(item.notification.type){
-				case FAVORITE -> GlobalUserPreferences.likeIcon ? R.attr.colorLike : R.attr.colorFavorite;
-				case REBLOG -> R.attr.colorBoost;
-				case POLL -> R.attr.colorPoll;
-				default -> android.R.attr.colorAccent;
-			})));
+			if(item.emojiRequest==null){
+				if((item.notification.type==Notification.Type.REACTION || item.notification.type==Notification.Type.PLEROMA_EMOJI_REACTION)
+						&& !TextUtils.isEmpty(item.notification.emoji)){
+					icon.setVisibility(View.GONE);
+					emoji.setVisibility(View.VISIBLE);
+					emoji.setText(item.notification.emoji);
+				}else{
+					emoji.setVisibility(View.GONE);
+					icon.setVisibility(View.VISIBLE);
+					icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+					icon.setImageTintList(ColorStateList.valueOf(UiUtils.getThemeColor(item.parentFragment.getActivity(), switch(item.notification.type){
+						case FAVORITE -> GlobalUserPreferences.likeIcon ? R.attr.colorLike : R.attr.colorFavorite;
+						case REBLOG -> R.attr.colorBoost;
+						case POLL -> R.attr.colorPoll;
+						default -> android.R.attr.colorAccent;
+					})));
+				}
+			}else{
+				emoji.setVisibility(View.GONE);
+				icon.setVisibility(View.VISIBLE);
+				icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
+				icon.setContentDescription(item.notification.emoji);
+				icon.setImageTintList(null);
+			}
 			deleteNotification.setVisibility(GlobalUserPreferences.enableDeleteNotifications && item.notification != null ? View.VISIBLE : View.GONE);
 			itemView.setBackgroundResource(item.notification.type != Notification.Type.POLL
 					&& item.notification.type != Notification.Type.REPORT ?
