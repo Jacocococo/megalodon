@@ -74,11 +74,16 @@ public class NotificationHeaderStatusDisplayItem extends StatusDisplayItem{
 				case SIGN_UP -> R.string.sk_signed_up;
 				case REPORT -> R.string.sk_reported;
 				case REACTION, PLEROMA_EMOJI_REACTION -> R.string.sk_reacted;
+				case MOVE -> R.string.sk_account_migrated_to;
 				default -> throw new IllegalStateException("Unexpected value: "+notification.type);
 			});
 
-			this.text = generateFormattedString(str, parsedName);
-			emojiHelper.setText(text);
+			if(notification.type==Notification.Type.MOVE){
+				this.text=generateFormattedString(str, notification.account.acct, notification.target.acct);
+			}else{
+				this.text=generateFormattedString(str, parsedName);
+				emojiHelper.setText(text);
+			}
 
 			if(!TextUtils.isEmpty(notification.emoji) && !TextUtils.isEmpty(notification.emojiUrl)){
 				emojiRequest=new UrlImageLoaderRequest(notification.emojiUrl, 0, V.dp(28));
@@ -177,6 +182,7 @@ public class NotificationHeaderStatusDisplayItem extends StatusDisplayItem{
 				case SIGN_UP -> R.drawable.ic_fluent_person_available_24_filled;
 				case UPDATE -> R.drawable.ic_fluent_edit_24_filled;
 				case REACTION, PLEROMA_EMOJI_REACTION -> R.drawable.ic_fluent_add_24_filled;
+				case MOVE -> R.drawable.ic_fluent_luggage_24_filled;
 				default -> throw new IllegalStateException("Unexpected value: "+item.notification.type);
 			});
 			if(item.emojiRequest==null){
@@ -219,7 +225,8 @@ public class NotificationHeaderStatusDisplayItem extends StatusDisplayItem{
 			}
 			Bundle args=new Bundle();
 			args.putString("account", item.accountID);
-			args.putParcelable("profileAccount", Parcels.wrap(item.notification.account));
+			args.putParcelable("profileAccount",
+					Parcels.wrap(item.notification.type==Notification.Type.MOVE ? item.notification.target : item.notification.account));
 			Nav.go(item.parentFragment.getActivity(), ProfileFragment.class, args);
 		}
 	}

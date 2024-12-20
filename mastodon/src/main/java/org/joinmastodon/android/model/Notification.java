@@ -18,6 +18,7 @@ public class Notification extends BaseModel implements DisplayItemsParent{
 	public Instant createdAt;
 	@RequiredField
 	public Account account;
+	public Account target;
 	public Status status;
 	public Report report;
 	public String emoji;
@@ -60,7 +61,9 @@ public class Notification extends BaseModel implements DisplayItemsParent{
 		@SerializedName("admin.sign_up")
 		SIGN_UP,
 		@SerializedName("admin.report")
-		REPORT
+		REPORT,
+		@SerializedName("move")
+		MOVE
 	}
 
 	@Parcel

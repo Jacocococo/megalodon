@@ -291,6 +291,7 @@
     <string name="sk_reported">reported</string>
     <string name="sk_reacted_with">%1$s reacted with %2$s</string>
     <string name="sk_reacted">%s reacted</string>
+    <string name="sk_account_migrated_to">%1$s migrated to %2$s</string>
     <string name="sk_sign_ups">Users signing up</string>
     <string name="sk_new_reports">New reports</string>
     <string name="sk_settings_server_version">Server version: %s</string>
