@@ -189,6 +189,11 @@ public class EmojiReactionsStatusDisplayItem extends StatusDisplayItem {
 			);
 			imgLoader.updateImages();
 			adapter.notifyDataSetChanged();
+
+			StatusDisplayItem next=getNextVisibleDisplayItem().orElse(null);
+			if(next!=null && !next.parentID.equals(item.parentID)) next=null;
+			if(next instanceof ExtendedFooterStatusDisplayItem)
+				itemView.setPadding(0, 0, 0, V.dp(12));
         }
 
 		private void hideEmojiKeyboard(){
