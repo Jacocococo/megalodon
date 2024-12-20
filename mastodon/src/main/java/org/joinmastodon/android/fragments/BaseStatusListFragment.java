@@ -1079,6 +1079,7 @@ public abstract class BaseStatusListFragment<T extends DisplayItemsParent> exten
 				if((ih instanceof HashtagStatusDisplayItem.Holder || ih instanceof AccountStatusDisplayItem.Holder) && (sh instanceof HashtagStatusDisplayItem.Holder || sh instanceof AccountStatusDisplayItem.Holder))
 					return false;
 				if (!ih.getItem().isMainStatus && ih.getItem().hasDescendantNeighbor) return false;
+				if (ih.getItem().isMainStatus && ih instanceof FooterStatusDisplayItem.Holder) return false;
 				return (!ih.getItemID().equals(sh.getItemID()) || sh instanceof ExtendedFooterStatusDisplayItem.Holder) && ih.getItem().getType()!=StatusDisplayItem.Type.GAP;
 			}
 			return false;

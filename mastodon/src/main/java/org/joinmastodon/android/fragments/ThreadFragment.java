@@ -105,6 +105,7 @@ public class ThreadFragment extends StatusListFragment implements ProvidesAssist
 			}
 
 			if(s.id.equals(mainStatus.id)){
+				item.isMainStatus=true;
 				if(item instanceof TextStatusDisplayItem text)
 					text.textSelectable=true;
 				else if(item instanceof FooterStatusDisplayItem footer)

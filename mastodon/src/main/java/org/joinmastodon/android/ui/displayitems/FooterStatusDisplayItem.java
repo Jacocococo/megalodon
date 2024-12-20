@@ -142,8 +142,7 @@ public class FooterStatusDisplayItem extends StatusDisplayItem{
 			int nextPos = getAbsoluteAdapterPosition() + 1;
 			boolean nextIsWarning = item.parentFragment.getDisplayItems().size() > nextPos &&
 					item.parentFragment.getDisplayItems().get(nextPos) instanceof WarningFilteredStatusDisplayItem;
-			boolean condenseBottom = !item.isMainStatus && item.hasDescendantNeighbor &&
-					!nextIsWarning;
+			boolean condenseBottom = item.isMainStatus || (item.hasDescendantNeighbor && !nextIsWarning);
 
 			ColorStateList color=item.parentFragment.getResources().getColorStateList(
 					GlobalUserPreferences.likeIcon ? R.color.like_icon : R.color.favorite_icon, item.parentFragment.getContext().getTheme()

@@ -64,7 +64,7 @@ public abstract class StatusDisplayItem{
 	public boolean
 			hasDescendantNeighbor=false,
 			hasAncestoringNeighbor=false,
-			isMainStatus=true,
+			isMainStatus=false,
 			isDirectDescendant=false,
 			isForQuote=false;
 
