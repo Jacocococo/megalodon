@@ -29,6 +29,8 @@ public class Notification extends BaseModel implements DisplayItemsParent{
 		account.postprocess();
 		if(status!=null)
 			status.postprocess();
+		if(type==null)
+			type=Type.UNKNOWN;
 	}
 
 	@Override
@@ -60,7 +62,9 @@ public class Notification extends BaseModel implements DisplayItemsParent{
 		@SerializedName("admin.sign_up")
 		SIGN_UP,
 		@SerializedName("admin.report")
-		REPORT
+		REPORT,
+
+		UNKNOWN
 	}
 
 	@Parcel

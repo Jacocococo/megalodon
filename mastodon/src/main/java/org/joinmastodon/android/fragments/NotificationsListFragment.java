@@ -154,7 +154,7 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 						if(getActivity()==null)
 							return;
 						maxID=result.maxID;
-						onDataLoaded(result.items.stream().filter(n->n.type!=null).collect(Collectors.toList()), !result.items.isEmpty());
+						onDataLoaded(result.items.stream().collect(Collectors.toList()), !result.items.isEmpty());
 						if(bannerHelper!=null) bannerHelper.onBannerBecameVisible();
 						if((offset>0 || (markerLoaded && (!usesUnreadEndpoint || unreadCountLoaded)) || reloadingFromCache) && !(onlyMentions || onlyPosts)){
 							updateUnreadCount();

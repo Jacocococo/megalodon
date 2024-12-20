@@ -184,7 +184,7 @@ public class CacheController{
 				if(!onlyMentions && !onlyPosts)
 					loadingNotifications=true;
 				boolean isAkkoma = AccountSessionManager.get(accountID).getInstance().map(Instance::isAkkoma).orElse(false);
-				new GetNotifications(maxID, count, onlyPosts ? EnumSet.of(Notification.Type.STATUS) : onlyMentions ? EnumSet.of(Notification.Type.MENTION): EnumSet.allOf(Notification.Type.class), isAkkoma)
+				new GetNotifications(maxID, count, onlyPosts ? EnumSet.of(Notification.Type.STATUS) : onlyMentions ? EnumSet.of(Notification.Type.MENTION) : null, isAkkoma)
 						.setCallback(new Callback<>(){
 							@Override
 							public void onSuccess(List<Notification> result){
@@ -235,12 +235,9 @@ public class CacheController{
 				db.delete(table, null, null);
 			ContentValues values=new ContentValues(4);
 			for(Notification n:notifications){
-				if(n.type==null){
-					continue;
-				}
 				values.put("id", n.id);
 				values.put("json", MastodonAPIController.gson.toJson(n));
-				values.put("type", n.type.ordinal());
+				values.put("type", n.type==null ? Notification.Type.UNKNOWN.ordinal() : n.type.ordinal());
 				values.put("time", n.createdAt.getEpochSecond());
 				db.insertWithOnConflict(table, null, values, SQLiteDatabase.CONFLICT_REPLACE);
 			}

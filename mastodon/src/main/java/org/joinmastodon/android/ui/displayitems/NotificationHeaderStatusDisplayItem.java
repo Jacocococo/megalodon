@@ -56,6 +56,8 @@ public class NotificationHeaderStatusDisplayItem extends StatusDisplayItem{
 
 		if(notification.type==Notification.Type.POLL){
 			text=parentFragment.getString(R.string.poll_ended);
+		}else if(notification.type==Notification.Type.UNKNOWN){
+			text=parentFragment.getString(R.string.sk_unknown_notification);
 		}else{
 			AccountSession session = AccountSessionManager.get(accountID);
 			avaRequest=new UrlImageLoaderRequest(
@@ -75,7 +77,7 @@ public class NotificationHeaderStatusDisplayItem extends StatusDisplayItem{
 				case REPORT -> R.string.sk_reported;
 				case REACTION, PLEROMA_EMOJI_REACTION ->
 						!TextUtils.isEmpty(notification.emoji) ? R.string.sk_reacted_with : R.string.sk_reacted;
-				default -> throw new IllegalStateException("Unexpected value: "+notification.type);
+				default -> R.string.sk_unknown_notification;
 			});
 
 			if (!TextUtils.isEmpty(notification.emoji)) {
@@ -164,7 +166,7 @@ public class NotificationHeaderStatusDisplayItem extends StatusDisplayItem{
 		public void onBind(NotificationHeaderStatusDisplayItem item){
 			text.setText(item.text);
 			timestamp.setText(item.timestamp);
-			avatar.setVisibility(item.notification.type==Notification.Type.POLL ? View.GONE : View.VISIBLE);
+			avatar.setVisibility(item.notification.type==Notification.Type.POLL || item.notification.type==Notification.Type.UNKNOWN ? View.GONE : View.VISIBLE);
 			icon.setImageResource(switch(item.notification.type){
 				case FAVORITE -> GlobalUserPreferences.likeIcon ? R.drawable.ic_fluent_heart_24_filled : R.drawable.ic_fluent_star_24_filled;
 				case REBLOG -> R.drawable.ic_fluent_arrow_repeat_all_24_filled;
@@ -174,7 +176,7 @@ public class NotificationHeaderStatusDisplayItem extends StatusDisplayItem{
 				case SIGN_UP -> R.drawable.ic_fluent_person_available_24_filled;
 				case UPDATE -> R.drawable.ic_fluent_edit_24_filled;
 				case REACTION, PLEROMA_EMOJI_REACTION -> R.drawable.ic_fluent_add_24_filled;
-				default -> throw new IllegalStateException("Unexpected value: "+item.notification.type);
+				default -> R.drawable.ic_fluent_question_24_filled;
 			});
 			icon.setImageTintList(ColorStateList.valueOf(UiUtils.getThemeColor(item.parentFragment.getActivity(), switch(item.notification.type){
 				case FAVORITE -> GlobalUserPreferences.likeIcon ? R.attr.colorLike : R.attr.colorFavorite;
@@ -186,7 +188,7 @@ public class NotificationHeaderStatusDisplayItem extends StatusDisplayItem{
 			itemView.setBackgroundResource(item.notification.type != Notification.Type.POLL
 					&& item.notification.type != Notification.Type.REPORT ?
 					selectableItemBackground : 0);
-			itemView.setClickable(item.notification.type != Notification.Type.POLL);
+			itemView.setClickable(item.notification.type != Notification.Type.POLL && (item.notification.type==Notification.Type.REPORT || item.notification.account!=null));
 			itemView.setPaddingRelative(itemView.getPaddingStart(), itemView.getPaddingTop(),
 					GlobalUserPreferences.enableDeleteNotifications ? V.dp(4) : V.dp(16), itemView.getPaddingBottom());
 		}
