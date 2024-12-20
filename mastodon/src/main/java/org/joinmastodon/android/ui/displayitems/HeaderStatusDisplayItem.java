@@ -529,7 +529,9 @@ public class HeaderStatusDisplayItem extends StatusDisplayItem{
 			MenuItem bookmark=menu.findItem(R.id.bookmark);
 			MenuItem muteConversation=menu.findItem(R.id.mute_conversation);
 			if(item.status.muted!=null){
-				muteConversation.setVisible((isOwnPost || item.parentFragment.isInstanceAkkoma()) || item.parentFragment instanceof NotificationsListFragment);
+				muteConversation.setVisible(isOwnPost || item.parentFragment.isInstanceAkkoma() || item.parentFragment instanceof NotificationsListFragment);
+				muteConversation.setIcon(item.status.muted ? R.drawable.ic_fluent_eye_24_filled : R.drawable.ic_fluent_eye_off_24_filled);
+				UiUtils.insetPopupMenuIcon(item.parentFragment.getContext(), muteConversation);
 				UiUtils.setMenuItemTitle(muteConversation, item.parentFragment.getString(item.status.muted ? R.string.unmute_conversation : R.string.mute_conversation));
 			}else{
 				muteConversation.setVisible(false);
