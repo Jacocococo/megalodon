@@ -85,7 +85,8 @@ public class ExtendedFooterStatusDisplayItem extends StatusDisplayItem{
 
 			if(s.editedAt!=null){
 				editHistory.setVisibility(View.VISIBLE);
-				editHistory.setText(UiUtils.formatRelativeTimestampAsMinutesAgo(itemView.getContext(), s.editedAt, false));
+				editHistory.setText(item.parentFragment.getString(R.string.last_edit_at_x,
+						UiUtils.formatRelativeTimestampAsMinutesAgo(itemView.getContext(), s.editedAt, false)));
 			}else{
 				editHistory.setVisibility(View.GONE);
 			}

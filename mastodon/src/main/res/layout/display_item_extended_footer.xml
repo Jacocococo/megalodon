@@ -88,6 +88,22 @@
 
 	</LinearLayout>
 
+	<Button
+		android:id="@+id/edit_history"
+		style="@style/Widget.Mastodon.M3.Button.Text.Icon"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:gravity="center"
+		android:paddingStart="8dp"
+		android:paddingEnd="12dp"
+		android:minHeight="48dp"
+		android:textColor="?colorM3OnSurface"
+		android:fontFamily="sans-serif"
+		android:drawableStart="@drawable/ic_fluent_history_20_regular"
+		android:drawablePadding="8dp"
+		android:drawableTint="?colorM3OnSurface"
+		tools:text="Dec 12, 2021, 12:42 PM"/>
+
 	<org.joinmastodon.android.ui.views.AutoOrientationLinearLayout
 		android:id="@+id/button_bar"
 		android:layout_width="match_parent"
@@ -130,22 +146,6 @@
 				tools:text="12 favorites"/>
 
 		</LinearLayout>
-
-		<Button
-			android:id="@+id/edit_history"
-			style="@style/Widget.Mastodon.M3.Button.Text.Icon"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:gravity="center"
-			android:paddingStart="8dp"
-			android:paddingEnd="12dp"
-			android:minHeight="48dp"
-			android:textColor="?colorM3OnSurface"
-			android:fontFamily="sans-serif"
-			android:drawableStart="@drawable/ic_fluent_history_20_regular"
-			android:drawablePadding="8dp"
-			android:drawableTint="?colorM3OnSurface"
-			tools:text="Dec 12, 2021, 12:42 PM"/>
 
 	</org.joinmastodon.android.ui.views.AutoOrientationLinearLayout>
 
