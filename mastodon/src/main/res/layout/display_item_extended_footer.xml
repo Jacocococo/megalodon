@@ -5,6 +5,7 @@
 	android:paddingHorizontal="8dp"
 	android:layout_width="match_parent"
 	android:layout_height="wrap_content"
+	android:layout_marginBottom="-4dp"
 	android:divider="@drawable/divider_inset_16dp"
 	android:showDividers="middle">
 
