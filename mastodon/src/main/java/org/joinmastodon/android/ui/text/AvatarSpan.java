@@ -4,6 +4,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.text.style.ReplacementSpan;
 
@@ -37,12 +38,11 @@ public class AvatarSpan extends CustomEmojiSpan{
 			drawable.setBounds(0, 0, dw, dh);
 		}
 		canvas.save();
-		float radius = size / 2f;
+		float radius = size / 4f;
 		Path clipPath = new Path();
-		clipPath.addCircle(x + radius, top + radius, radius, Path.Direction.CW);
+		clipPath.addRoundRect(new RectF(x, top, x+dw, top+dh), radius, radius, Path.Direction.CW);
 		canvas.clipPath(clipPath);
 		canvas.translate(x, top);
-		canvas.scale(size/(float)dw, size/(float)dh, 0f, 0f);
 		drawable.draw(canvas);
 		canvas.restore();
 	}
