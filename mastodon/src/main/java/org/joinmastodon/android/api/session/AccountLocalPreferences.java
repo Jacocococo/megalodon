@@ -48,6 +48,7 @@ public class AccountLocalPreferences{
 	public NewEmojiReactionButton newEmojiReactionButton;
 	public ColorPreference color;
 	public ArrayList<Emoji> recentCustomEmoji;
+	public boolean inlineAvatars;
 
 	private final static Type recentLanguagesType=new TypeToken<ArrayList<String>>() {}.getType();
 	private final static Type timelinesType=new TypeToken<ArrayList<TimelineDefinition>>() {}.getType();
@@ -80,6 +81,7 @@ public class AccountLocalPreferences{
 		newEmojiReactionButton=NewEmojiReactionButton.valueOf(prefs.getString("newEmojiReactionButton", NewEmojiReactionButton.WITH_REACTIONS.name()));
 		color=prefs.contains("color") ? ColorPreference.valueOf(prefs.getString("color", null)) : null;
 		recentCustomEmoji=fromJson(prefs.getString("recentCustomEmoji", null), recentCustomEmojiType, new ArrayList<>());
+		inlineAvatars=prefs.getBoolean("inlineAvatars", true);
 	}
 
 	public long getNotificationsPauseEndTime(){
@@ -120,6 +122,7 @@ public class AccountLocalPreferences{
 				.putString("newEmojiReactionButton", newEmojiReactionButton.name())
 				.putString("color", color!=null ? color.name() : null)
 				.putString("recentCustomEmoji", gson.toJson(recentCustomEmoji))
+				.putBoolean("inlineAvatars", inlineAvatars)
 				.apply();
 	}
 

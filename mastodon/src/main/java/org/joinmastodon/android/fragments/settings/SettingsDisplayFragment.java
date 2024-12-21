@@ -38,7 +38,7 @@ import me.grishka.appkit.FragmentStackActivity;
 public class SettingsDisplayFragment extends BaseSettingsFragment<Void>{
 	private ImageView themeTransitionWindowView;
 	private ListItem<Void> themeItem;
-	private CheckableListItem<Void> revealCWsItem, hideSensitiveMediaItem, interactionCountsItem, emojiInNamesItem;
+	private CheckableListItem<Void> revealCWsItem, hideSensitiveMediaItem, interactionCountsItem, emojiInNamesItem, inlineAvatarsItem;
 
 	// MEGALODON
 	private CheckableListItem<Void> trueBlackModeItem, marqueeItem, disableSwipeItem, reduceMotionItem, altIndicatorItem, noAltIndicatorItem, collapsePostsItem, showCardsItem, spectatorModeItem, hideFabItem, translateOpenedItem, disablePillItem, showNavigationLabelsItem, likeIconItem, underlinedLinksItem;
@@ -63,6 +63,7 @@ public class SettingsDisplayFragment extends BaseSettingsFragment<Void>{
 				hideSensitiveMediaItem=new CheckableListItem<>(R.string.settings_hide_sensitive_media, 0, CheckableListItem.Style.SWITCH, lp.hideSensitiveMedia, R.drawable.ic_fluent_flag_24_regular, i->toggleCheckableItem(hideSensitiveMediaItem)),
 				interactionCountsItem=new CheckableListItem<>(R.string.settings_show_interaction_counts, 0, CheckableListItem.Style.SWITCH, lp.showInteractionCounts, R.drawable.ic_fluent_number_row_24_regular, i->toggleCheckableItem(interactionCountsItem)),
 				emojiInNamesItem=new CheckableListItem<>(R.string.settings_show_emoji_in_names, 0, CheckableListItem.Style.SWITCH, lp.customEmojiInNames, R.drawable.ic_fluent_emoji_24_regular, i->toggleCheckableItem(emojiInNamesItem)),
+				inlineAvatarsItem=new CheckableListItem<>(R.string.sk_settings_inline_avatars, 0, CheckableListItem.Style.SWITCH, lp.inlineAvatars, R.drawable.ic_fluent_person_circle_24_regular, i->toggleCheckableItem(inlineAvatarsItem)),
 				marqueeItem=new CheckableListItem<>(R.string.sk_settings_enable_marquee, 0, CheckableListItem.Style.SWITCH, GlobalUserPreferences.toolbarMarquee, R.drawable.ic_fluent_text_more_24_regular, i->toggleCheckableItem(marqueeItem)),
 				reduceMotionItem=new CheckableListItem<>(R.string.sk_settings_reduce_motion, 0, CheckableListItem.Style.SWITCH, GlobalUserPreferences.reduceMotion, R.drawable.ic_fluent_star_emphasis_24_regular, i->toggleCheckableItem(reduceMotionItem)),
 				disableSwipeItem=new CheckableListItem<>(R.string.sk_settings_tabs_disable_swipe, 0, CheckableListItem.Style.SWITCH, GlobalUserPreferences.disableSwipe, R.drawable.ic_fluent_swipe_right_24_regular, i->toggleCheckableItem(disableSwipeItem)),
@@ -109,6 +110,7 @@ public class SettingsDisplayFragment extends BaseSettingsFragment<Void>{
 		lp.hideSensitiveMedia=hideSensitiveMediaItem.checked;
 		lp.showInteractionCounts=interactionCountsItem.checked;
 		lp.customEmojiInNames=emojiInNamesItem.checked;
+		lp.inlineAvatars=inlineAvatarsItem.checked;
 		lp.save();
 		GlobalUserPreferences.toolbarMarquee=marqueeItem.checked;
 		GlobalUserPreferences.reduceMotion=reduceMotionItem.checked;

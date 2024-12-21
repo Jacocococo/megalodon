@@ -60,18 +60,20 @@ public class ReblogOrReplyLineStatusDisplayItem extends StatusDisplayItem{
 		if(AccountSessionManager.get(parentFragment.getAccountID()).getLocalPreferences().customEmojiInNames)
 			HtmlParser.parseCustomEmoji(ssb, emojis);
 
-		if(status.reblog!=null&&handleClick!=null){
-			//add temp chars for span replacement, should be same as spans added below
-			ssb.insert(0, "  ");
-			ssb.setSpan(new AvatarSpan(status.account), 0, 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-			ssb.setSpan(new SpacerSpan(V.dp(8), 20), 1, 2, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-		}
-		int replyPrefixLength=context.getString(R.string.in_reply_to).length()-2; //subtract 2 for placeholder
-		if(status.inReplyToAccountId!=null&&ssb.length()>replyPrefixLength&&account!=null){
-			//add temp chars for span replacement, should be same as spans added below
-			ssb.insert(replyPrefixLength, "  ");
-			ssb.setSpan(new AvatarSpan(account), replyPrefixLength, replyPrefixLength+1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-			ssb.setSpan(new SpacerSpan(V.dp(8), 20), replyPrefixLength+1, replyPrefixLength+2, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+		if(AccountSessionManager.get(parentFragment.getAccountID()).getLocalPreferences().inlineAvatars){
+			if(status.reblog!=null&&handleClick!=null){
+				//add temp chars for span replacement, should be same as spans added below
+				ssb.insert(0, "  ");
+				ssb.setSpan(new AvatarSpan(status.account), 0, 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+				ssb.setSpan(new SpacerSpan(V.dp(8), 20), 1, 2, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+			}
+			int replyPrefixLength=context.getString(R.string.in_reply_to).length()-2; //subtract 2 for placeholder
+			if(status.inReplyToAccountId!=null&&ssb.length()>replyPrefixLength&&account!=null){
+				//add temp chars for span replacement, should be same as spans added below
+				ssb.insert(replyPrefixLength, "  ");
+				ssb.setSpan(new AvatarSpan(account), replyPrefixLength, replyPrefixLength+1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+				ssb.setSpan(new SpacerSpan(V.dp(8), 20), replyPrefixLength+1, replyPrefixLength+2, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+			}
 		}
 		this.text=ssb;
 		emojiHelper.setText(ssb);
