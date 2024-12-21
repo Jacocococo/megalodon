@@ -17,6 +17,7 @@ import android.graphics.Insets;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
@@ -60,6 +61,7 @@ import org.joinmastodon.android.model.Attachment;
 import org.joinmastodon.android.ui.ImageDescriptionSheet;
 import org.joinmastodon.android.model.Status;
 import org.joinmastodon.android.ui.M3AlertDialogBuilder;
+import org.joinmastodon.android.ui.drawables.BlurhashCrossfadeDrawable;
 import org.joinmastodon.android.ui.utils.UiUtils;
 
 import java.io.File;
@@ -829,6 +831,7 @@ public class PhotoViewer implements ZoomPanView.Listener{
 
 	private class PhotoViewHolder extends BaseHolder implements ViewImageLoader.Target{
 		public ImageView imageView;
+		private boolean setImageSizeOnLoad;
 
 		public PhotoViewHolder(){
 			imageView=new ImageView(activity);
@@ -844,9 +847,12 @@ public class PhotoViewer implements ZoomPanView.Listener{
 				params.width=item.getWidth();
 				params.height=item.getHeight();
 			}else if(currentDrawable!=null){
+				if(currentDrawable instanceof BlurhashCrossfadeDrawable)
+					setImageSizeOnLoad=true;
 				params.width=currentDrawable.getIntrinsicWidth();
 				params.height=currentDrawable.getIntrinsicHeight();
 			}else{
+				setImageSizeOnLoad=true;
 				params.width=1920;
 				params.height=1080;
 			}
@@ -855,6 +861,14 @@ public class PhotoViewer implements ZoomPanView.Listener{
 
 		@Override
 		public void setImageDrawable(Drawable d){
+			if(setImageSizeOnLoad && d instanceof BitmapDrawable){
+				// this messes with the animation but is better than the alternative
+				FrameLayout.LayoutParams params=(FrameLayout.LayoutParams) imageView.getLayoutParams();
+				params.width=d.getIntrinsicWidth();
+				params.height=d.getIntrinsicHeight();
+				zoomPanView.updateLayout(true);
+				setImageSizeOnLoad=false;
+			}
 			imageView.setImageDrawable(d);
 		}
 
@@ -1010,7 +1024,7 @@ public class PhotoViewer implements ZoomPanView.Listener{
 			FrameLayout.LayoutParams params=(FrameLayout.LayoutParams) wrap.getLayoutParams();
 			params.width=width;
 			params.height=height;
-			zoomPanView.updateLayout();
+			zoomPanView.updateLayout(false);
 		}
 
 		@Override

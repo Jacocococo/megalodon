@@ -54,7 +54,7 @@ public class ZoomPanView extends FrameLayout implements ScaleGestureDetector.OnS
 	private float cropAnimationValue, rawCropAndFadeValue;
 	private float lastFlingVelocityY;
 	private float backgroundAlphaForTransition=1f;
-	private boolean forceUpdateLayout;
+	private boolean forceUpdateLayout, forceUpdateViewTransform;
 	private int[] transitionCornerRadius;
 	private Path transitionClipPath=new Path();
 	private float[] tmpFloatArray=new float[8];
@@ -128,15 +128,18 @@ public class ZoomPanView extends FrameLayout implements ScaleGestureDetector.OnS
 		minScale=scale;
 		maxScale=Math.max(3f, height/(float)child.getHeight());
 		matrix.setScale(scale, scale);
-		if(!animatingTransition)
+		if(!animatingTransition || forceUpdateViewTransform)
 			updateViewTransform(false);
 		updateLimits(scale);
 		transX=transY=0;
 		if(forceUpdateLayout)
 			forceUpdateLayout=false;
+		if(forceUpdateViewTransform)
+			forceUpdateViewTransform=false;
 	}
 
-	public void updateLayout(){
+	public void updateLayout(boolean forceUpdateTransform){
+		forceUpdateViewTransform=forceUpdateTransform;
 		forceUpdateLayout=true;
 		requestLayout();
 	}
