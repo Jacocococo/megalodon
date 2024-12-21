@@ -444,4 +444,6 @@
 	<string name="sk_poll_multiple_choice">Multiple choices</string>
 	<string name="sk_poll_show_results">Show results</string>
 	<string name="sk_poll_hide_results">Hide results</string>
+	<string name="sk_failed_mark_read">Failed to mark as read</string>
+	<string name="sk_unknown_notification">Unknown notification type</string>
 </resources>

@@ -330,53 +330,37 @@ public class HomeFragment extends AppKitFragment implements OnBackPressedListene
 		if (profileFragment.isAdded()) getChildFragmentManager().putFragment(outState, "profileFragment", profileFragment);
 	}
 
-	@Override
-	protected void onShown(){
-		super.onShown();
-		reloadNotificationsForUnreadCount();
-	}
-
-	public void reloadNotificationsForUnreadCount(){
-		List<Notification>[] notifications=new List[]{null};
-		String[] marker={null};
-
-		AccountSessionManager.get(accountID).reloadNotificationsMarker(m->{
-			marker[0]=m;
-			if(notifications[0]!=null){
-				updateUnreadCount(notifications[0], marker[0]);
-			}
-		});
-
-		AccountSessionManager.get(accountID).getCacheController().getNotifications(null, 40, false, false, true, new Callback<>(){
-			@Override
-			public void onSuccess(PaginatedResponse<List<Notification>> result){
-				notifications[0]=result.items;
-				if(marker[0]!=null)
-					updateUnreadCount(notifications[0], marker[0]);
-			}
-
-			@Override
-			public void onError(ErrorResponse error){}
-		});
-	}
-
 	@SuppressLint("DefaultLocale")
-	private void updateUnreadCount(List<Notification> notifications, String marker){
+	public void updateUnreadCount(List<Notification> notifications, String marker, int estimateCount, boolean limitedEstimate){
 		if(notifications.isEmpty() || ObjectIdComparator.INSTANCE.compare(notifications.get(0).id, marker)<=0){
-			V.setVisibilityAnimated(notificationsBadge, View.GONE);
+			updateUnreadCount(0, false);
 		}else{
-			V.setVisibilityAnimated(notificationsBadge, View.VISIBLE);
 			if(ObjectIdComparator.INSTANCE.compare(notifications.get(notifications.size()-1).id, marker)>0){
-				notificationsBadge.setText(String.format("%d+", notifications.size()));
+				boolean useEstimate=estimateCount>notifications.size();
+				updateUnreadCount(useEstimate ? estimateCount : notifications.size(), !useEstimate || limitedEstimate);
 			}else{
 				int count=0;
 				for(Notification n:notifications){
-					if(n.id.equals(marker))
+					// if the loop is still running when the id is less than
+					// the marker it means that the notification that the
+					// marker points to no longer exists. Hence the first
+					// one with an id lower than the marker is used instead
+					if(ObjectIdComparator.INSTANCE.compare(n.id, marker)<=0)
 						break;
 					count++;
 				}
-				notificationsBadge.setText(String.format("%d", count));
+				updateUnreadCount(count, false);
 			}
+		}
+	}
+
+	@SuppressLint("DefaultLocale")
+	public void updateUnreadCount(int count, boolean more){
+		if(count<=0){
+			V.setVisibilityAnimated(notificationsBadge, View.GONE);
+		}else{
+			V.setVisibilityAnimated(notificationsBadge, View.VISIBLE);
+			notificationsBadge.setText(String.format(more ? "%d+" : "%d", count));
 		}
 	}
 

@@ -112,7 +112,9 @@
 			android:paddingTop="12dp"
 			android:paddingBottom="16dp"
 			android:tooltipText="@string/sk_tab_notifications"
-			android:orientation="vertical">
+			android:orientation="vertical"
+			android:clipChildren="false"
+			android:clipToPadding="false">
 
 			<RelativeLayout
 				android:id="@+id/tab_notifications_pill"
@@ -141,7 +143,7 @@
 					android:layout_marginTop="-4dp"
 					android:layout_marginStart="-12dp"
 					android:background="@drawable/bg_tabbar_badge"
-					android:textColor="?colorM3OnError"
+					android:textColor="?colorM3OnPrimary"
 					android:gravity="center"
 					android:includeFontPadding="false"
 					android:textAppearance="@style/m3_label_small"

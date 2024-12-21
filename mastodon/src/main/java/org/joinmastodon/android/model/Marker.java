@@ -11,6 +11,7 @@ public class Marker extends BaseModel{
 	public String lastReadId;
 	public long version;
 	public Instant updatedAt;
+	public Pleroma pleroma;
 
 	@Override
 	public String toString(){
@@ -26,5 +27,9 @@ public class Marker extends BaseModel{
 		HOME,
 		@SerializedName("notifications")
 		NOTIFICATIONS
+	}
+
+	public static class Pleroma{
+		public int unreadCount;
 	}
 }

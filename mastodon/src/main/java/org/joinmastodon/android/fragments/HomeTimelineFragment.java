@@ -168,10 +168,6 @@ public class HomeTimelineFragment extends StatusListFragment {
 					}
 				})
 				.exec(accountID);
-
-		if (parent.getParentFragment() instanceof HomeFragment homeFragment) {
-			homeFragment.reloadNotificationsForUnreadCount();
-		}
 	}
 
 	@Override

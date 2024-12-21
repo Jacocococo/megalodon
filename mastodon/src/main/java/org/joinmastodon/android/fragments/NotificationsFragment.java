@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -27,10 +28,14 @@ import org.joinmastodon.android.R;
 import org.joinmastodon.android.api.requests.accounts.GetFollowRequests;
 import org.joinmastodon.android.api.requests.markers.SaveMarkers;
 import org.joinmastodon.android.api.requests.notifications.PleromaMarkNotificationsRead;
+import org.joinmastodon.android.api.session.AccountSession;
 import org.joinmastodon.android.api.session.AccountSessionManager;
 import org.joinmastodon.android.events.FollowRequestHandledEvent;
+import org.joinmastodon.android.events.NotificationsMarkerUpdatedEvent;
 import org.joinmastodon.android.model.Account;
 import org.joinmastodon.android.model.HeaderPaginationList;
+import org.joinmastodon.android.model.Notification;
+import org.joinmastodon.android.model.TimelineMarkers;
 import org.joinmastodon.android.ui.SimpleViewHolder;
 import org.joinmastodon.android.ui.tabs.TabLayout;
 import org.joinmastodon.android.ui.tabs.TabLayoutMediator;
@@ -39,6 +44,8 @@ import org.joinmastodon.android.utils.ElevationOnScrollListener;
 import org.joinmastodon.android.utils.ObjectIdComparator;
 import org.joinmastodon.android.utils.ProvidesAssistContent;
 
+import java.util.List;
+
 import me.grishka.appkit.Nav;
 import me.grishka.appkit.api.Callback;
 import me.grishka.appkit.api.ErrorResponse;
@@ -46,14 +53,15 @@ import me.grishka.appkit.fragments.BaseRecyclerFragment;
 import me.grishka.appkit.utils.V;
 import me.grishka.appkit.views.FragmentRootLinearLayout;
 
-public class NotificationsFragment extends MastodonToolbarFragment implements ScrollableToTop, ProvidesAssistContent, HasElevationOnScrollListener {
+public class NotificationsFragment extends MastodonToolbarFragment implements ScrollableToTop, ProvidesAssistContent, HasElevationOnScrollListener, HasAccountID {
 
 	TabLayout tabLayout;
 	private ViewPager2 pager;
 	private FrameLayout[] tabViews;
 	private View tabsDivider;
 	private TabLayoutMediator tabLayoutMediator;
-	String unreadMarker, realUnreadMarker;
+	String unreadMarker;
+	boolean savingMarkers, refreshAfterSavingMarkers;
 	private MenuItem markAllReadItem;
 	private NotificationsListFragment allNotificationsFragment, mentionsFragment;
 	private ElevationOnScrollListener elevationOnScrollListener;
@@ -85,7 +93,7 @@ public class NotificationsFragment extends MastodonToolbarFragment implements Sc
 	@Override
 	public void onShown() {
 		super.onShown();
-		unreadMarker=realUnreadMarker=AccountSessionManager.get(accountID).getLastKnownNotificationsMarker();
+		unreadMarker=AccountSessionManager.get(accountID).getLastKnownNotificationsMarker();
 	}
 
 	@Override
@@ -121,22 +129,94 @@ public class NotificationsFragment extends MastodonToolbarFragment implements Sc
 		return false;
 	}
 
+	private void onSaveMarkersSuccess(String id){
+		savingMarkers=false;
+
+		AccountSession session=getSession();
+		session.setNotificationsMarker(id);
+		session.setUnreadNotificationsCount(0);
+
+		if(refreshAfterSavingMarkers)
+			allNotificationsFragment.onRefresh();
+	}
+
+	private void onSaveMarkersError(String previousID){
+		savingMarkers=false;
+
+		unreadMarker=previousID;
+		allNotificationsFragment.resetUnreadBackground();
+		allNotificationsFragment.updateUnreadCount();
+
+		Toast.makeText(
+				getContext(),
+				getString(R.string.sk_failed_mark_read),
+				Toast.LENGTH_SHORT
+		).show();
+
+		if(refreshAfterSavingMarkers)
+			allNotificationsFragment.onRefresh();
+	}
+
+	private void saveMarkers(String id) {
+		String previousID=unreadMarker; // save current state to revert on error
+		savingMarkers=true;
+		final boolean[] saveMarkersFinished={false};
+		final boolean[] pleromaMarkReadFinished={!isInstanceAkkoma()};
+		new SaveMarkers(null, id)
+				.setCallback(new Callback<>(){
+					@Override
+					public void onSuccess(TimelineMarkers result){
+						saveMarkersFinished[0]=true;
+						if(!pleromaMarkReadFinished[0])
+							return;
+						onSaveMarkersSuccess(id);
+					}
+
+					@Override
+					public void onError(ErrorResponse error){
+						saveMarkersFinished[0]=true;
+						if(isInstanceAkkoma()){
+							if(pleromaMarkReadFinished[0])
+								onSaveMarkersSuccess(id);
+							return;
+						}
+						onSaveMarkersError(previousID);
+					}
+				})
+				.exec(accountID);
+		if(isInstanceAkkoma()){
+			new PleromaMarkNotificationsRead(id)
+					.setCallback(new Callback<>(){
+						@Override
+						public void onSuccess(List<Notification> result){
+							pleromaMarkReadFinished[0]=true;
+							if(!saveMarkersFinished[0])
+								return;
+							onSaveMarkersSuccess(id);
+						}
+
+						@Override
+						public void onError(ErrorResponse error){
+							onSaveMarkersError(previousID);
+						}
+					})
+					.exec(accountID);
+		}
+	}
+
 	void markAsRead(){
 		if(allNotificationsFragment.getData().isEmpty()) return;
 		String id=allNotificationsFragment.getData().get(0).id;
-		if(ObjectIdComparator.INSTANCE.compare(id, realUnreadMarker)>0){
-			new SaveMarkers(null, id).exec(accountID);
-			if (allNotificationsFragment.isInstanceAkkoma()) {
-				new PleromaMarkNotificationsRead(id).exec(accountID);
-			}
-			AccountSessionManager.get(accountID).setNotificationsMarker(id, true);
-			realUnreadMarker=id;
+		if(ObjectIdComparator.INSTANCE.compare(id, unreadMarker)>0){
+			saveMarkers(id);
+			unreadMarker=id;
+			E.post(new NotificationsMarkerUpdatedEvent(getSession().getID(), id, true));
 			updateMarkAllReadButton();
 		}
 	}
 
 	public void updateMarkAllReadButton(){
-		markAllReadItem.setVisible(!allNotificationsFragment.getData().isEmpty() && realUnreadMarker!=null && !realUnreadMarker.equals(allNotificationsFragment.getData().get(0).id));
+		markAllReadItem.setVisible(!allNotificationsFragment.getData().isEmpty() && unreadMarker!=null && !unreadMarker.equals(allNotificationsFragment.getData().get(0).id));
 	}
 
 	@Override
@@ -301,6 +381,11 @@ public class NotificationsFragment extends MastodonToolbarFragment implements Sc
 	@Override
 	public void onProvideAssistContent(AssistContent assistContent) {
 		callFragmentToProvideAssistContent(getFragmentForPage(pager.getCurrentItem()), assistContent);
+	}
+
+	@Override
+	public String getAccountID(){
+		return accountID;
 	}
 
 	private class DiscoverPagerAdapter extends RecyclerView.Adapter<SimpleViewHolder>{

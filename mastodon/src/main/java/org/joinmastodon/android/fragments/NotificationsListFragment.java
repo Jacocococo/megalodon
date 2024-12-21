@@ -14,15 +14,21 @@ import com.squareup.otto.Subscribe;
 import org.joinmastodon.android.E;
 import org.joinmastodon.android.GlobalUserPreferences;
 import org.joinmastodon.android.R;
+import org.joinmastodon.android.api.requests.markers.GetMarkers;
+import org.joinmastodon.android.api.requests.notifications.GetUnreadNotificationsCount;
 import org.joinmastodon.android.api.session.AccountSessionManager;
 import org.joinmastodon.android.events.EmojiReactionsUpdatedEvent;
 import org.joinmastodon.android.events.PollUpdatedEvent;
 import org.joinmastodon.android.events.RemoveAccountPostsEvent;
 import org.joinmastodon.android.events.StatusCountersUpdatedEvent;
 import org.joinmastodon.android.model.Account;
+import org.joinmastodon.android.model.Instance;
+import org.joinmastodon.android.model.Marker;
 import org.joinmastodon.android.model.Notification;
 import org.joinmastodon.android.model.PaginatedResponse;
 import org.joinmastodon.android.model.Status;
+import org.joinmastodon.android.model.TimelineMarkers;
+import org.joinmastodon.android.model.UnreadNotificationsCount;
 import org.joinmastodon.android.ui.displayitems.AccountCardStatusDisplayItem;
 import org.joinmastodon.android.ui.displayitems.EmojiReactionsStatusDisplayItem;
 import org.joinmastodon.android.ui.displayitems.ExtendedFooterStatusDisplayItem;
@@ -31,7 +37,6 @@ import org.joinmastodon.android.ui.displayitems.NotificationHeaderStatusDisplayI
 import org.joinmastodon.android.ui.displayitems.StatusDisplayItem;
 import org.joinmastodon.android.ui.displayitems.TextStatusDisplayItem;
 import org.joinmastodon.android.ui.utils.DiscoverInfoBannerHelper;
-import org.joinmastodon.android.ui.utils.InsetStatusItemDecoration;
 import org.joinmastodon.android.ui.utils.UiUtils;
 import org.joinmastodon.android.utils.ObjectIdComparator;
 import org.parceler.Parcels;
@@ -44,6 +49,8 @@ import java.util.stream.Stream;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import me.grishka.appkit.api.Callback;
+import me.grishka.appkit.api.ErrorResponse;
 import me.grishka.appkit.api.SimpleCallback;
 import me.grishka.appkit.utils.MergeRecyclerAdapter;
 
@@ -51,8 +58,10 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 	private boolean onlyMentions;
 	private boolean onlyPosts;
 	private String maxID;
-	private boolean reloadingFromCache;
+	private boolean reloadingFromCache, markerLoaded;
 	private DiscoverInfoBannerHelper bannerHelper;
+	private int accurateUnreadCount=-1;
+	private boolean usesUnreadEndpoint, unreadCountLoaded;
 
 	@Override
 	protected boolean wantsComposeButton() {
@@ -70,6 +79,10 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 		if (onlyPosts) {
 			bannerHelper=new DiscoverInfoBannerHelper(DiscoverInfoBannerHelper.BannerType.POST_NOTIFICATIONS, accountID);
 		}
+
+		Instance instance=getInstance().get();
+		if(instance.v2!=null && instance.v2.apiVersions!=null && instance.v2.apiVersions.mastodon>=2 && !instance.isAkkoma())
+			usesUnreadEndpoint=true;
 	}
 
 	@Override
@@ -128,6 +141,14 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 
 	@Override
 	protected void doLoadData(int offset, int count){
+		if(getParentFragment() instanceof NotificationsFragment nf && nf.savingMarkers){
+			nf.refreshAfterSavingMarkers=true;
+			return;
+		}
+
+		dataLoading=true;
+
+		// notifications content
 		AccountSessionManager.getInstance()
 				.getAccount(accountID).getCacheController()
 				.getNotifications(offset>0 ? maxID : null, count, onlyMentions, onlyPosts, refreshing && !reloadingFromCache, new SimpleCallback<>(this){
@@ -136,19 +157,94 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 						if(getActivity()==null)
 							return;
 						maxID=result.maxID;
-						onDataLoaded(result.items.stream().filter(n->n.type!=null).collect(Collectors.toList()), !result.items.isEmpty());
+						onDataLoaded(result.items.stream().collect(Collectors.toList()), !result.items.isEmpty());
 						if(bannerHelper!=null) bannerHelper.onBannerBecameVisible();
-						reloadingFromCache=false;
-						if (getParentFragment() instanceof NotificationsFragment nf) {
-							nf.updateMarkAllReadButton();
+						if((offset>0 || (markerLoaded && (!usesUnreadEndpoint || unreadCountLoaded)) || reloadingFromCache) && !(onlyMentions || onlyPosts)){
+							updateUnreadCount();
+						}else {
+							reloadingFromCache=false;
+							if(getParentFragment() instanceof NotificationsFragment nf)
+								nf.updateMarkAllReadButton();
 						}
 					}
 				});
+
+		if(offset>0 || reloadingFromCache || onlyMentions || onlyPosts)
+			return;
+
+		// mastodon v2 unread count endpoint
+		if(usesUnreadEndpoint){
+			new GetUnreadNotificationsCount()
+					.setCallback(new Callback<>(){
+						@Override
+						public void onSuccess(UnreadNotificationsCount result){
+							accurateUnreadCount=result.count;
+							getSession().setUnreadNotificationsCount(accurateUnreadCount);
+							if(!dataLoading && markerLoaded){
+								updateUnreadCount();
+							}else{
+								unreadCountLoaded=true;
+							}
+						}
+
+						@Override
+						public void onError(ErrorResponse error){}
+					})
+					.exec(getAccountID());
+		}
+
+		// markers, also containing Pleroma unread count
+		if(getParentFragment() instanceof NotificationsFragment nf){
+			new GetMarkers()
+					.setCallback(new Callback<>(){
+						@Override
+						public void onSuccess(TimelineMarkers result){
+							if(result.notifications==null || TextUtils.isEmpty(result.notifications.lastReadId))
+								return;
+							Marker m=result.notifications;
+							if(ObjectIdComparator.INSTANCE.compare(m.lastReadId, nf.unreadMarker)>0){
+								nf.unreadMarker=m.lastReadId;
+								getSession().setNotificationsMarker(nf.unreadMarker);
+							}
+							if(m.pleroma!=null){
+								accurateUnreadCount=m.pleroma.unreadCount;
+								getSession().setUnreadNotificationsCount(accurateUnreadCount);
+							}
+							if(!dataLoading && (!usesUnreadEndpoint || unreadCountLoaded)){
+								updateUnreadCount();
+							}else{
+								markerLoaded=true;
+							}
+						}
+
+						@Override
+						public void onError(ErrorResponse error){}
+					})
+					.exec(getAccountID());
+		}
+	}
+
+	public void updateUnreadCount() {
+		markerLoaded=false;
+		unreadCountLoaded=false;
+		if(getParentFragment() instanceof NotificationsFragment nf && nf.getParentFragment() instanceof HomeFragment hf){
+			if(accurateUnreadCount!=-1 && !usesUnreadEndpoint)
+				hf.updateUnreadCount(accurateUnreadCount, false);
+			else
+				hf.updateUnreadCount(data, nf.unreadMarker, accurateUnreadCount, usesUnreadEndpoint && (accurateUnreadCount==100)); // 100 is default max so it is unknown if it's higher
+			nf.updateMarkAllReadButton();
+		}
+		if(reloadingFromCache){
+			reloadingFromCache=false;
+			if(GlobalUserPreferences.loadNewPosts)
+				refresh();
+		}
 	}
 
 	@Override
 	protected void onShown(){
 		super.onShown();
+		accurateUnreadCount=getSession().getLastKnownUnreadNotificationsCount();
 		if(!dataLoading && canRefreshWithoutUpsettingUser()){
 			if(onlyMentions){
 				refresh();
@@ -203,6 +299,12 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 				}
 			}
 		}, 0);
+		refreshLayout.setOnRefreshListener(()->{
+			if(!onlyMentions && !onlyPosts && getParentFragment() instanceof NotificationsFragment nf){
+				nf.markAsRead();
+			}
+			onRefresh();
+		});
 	}
 
 	@Override
@@ -337,22 +439,12 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 	}
 
 	void resetUnreadBackground(){
-		if (getParentFragment() instanceof NotificationsFragment nf) {
-			nf.unreadMarker=nf.realUnreadMarker;
-			list.invalidate();
-		}
+		list.invalidate();
 	}
 
 	@Override
 	public void onRefresh(){
 		super.onRefresh();
-		if (getParentFragment() instanceof NotificationsFragment nf) {
-			if (!onlyMentions && !onlyPosts) nf.markAsRead();
-			else AccountSessionManager.get(accountID).reloadNotificationsMarker(m->{
-				nf.unreadMarker=nf.realUnreadMarker=m;
-				nf.updateMarkAllReadButton();
-			});
-		}
 		resetUnreadBackground();
 	}
 
