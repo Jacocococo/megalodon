@@ -384,7 +384,7 @@ public class AccountSessionManager{
 	}
 
 	private void updateInstanceEmojis(Instance instance, String domain){
-		new GetCustomEmojis()
+		GetCustomEmojis getCustomEmojisRequest=(GetCustomEmojis)new GetCustomEmojis()
 				.setCallback(new Callback<>(){
 					@Override
 					public void onSuccess(List<Emoji> result){
@@ -404,8 +404,12 @@ public class AccountSessionManager{
 						wrapper.instance = instance;
 						MastodonAPIController.runInBackground(()->writeInstanceInfoFile(wrapper, domain));
 					}
-				})
-				.execNoAuth(domain);
+				});
+
+		sessions.values().stream().filter(session->session.domain.equals(domain)).findFirst().ifPresentOrElse(
+				(session)->getCustomEmojisRequest.exec(domain, session.token),
+				()->getCustomEmojisRequest.execNoAuth(domain)
+		);
 	}
 
 	private File getInstanceInfoFile(String domain){
