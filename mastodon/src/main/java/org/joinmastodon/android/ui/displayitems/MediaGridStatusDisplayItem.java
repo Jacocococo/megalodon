@@ -255,6 +255,9 @@ public class MediaGridStatusDisplayItem extends StatusDisplayItem{
 				item.tiledLayout=PhotoLayoutHelper.processThumbs(item.attachments);
 				UiUtils.beginLayoutTransition((ViewGroup) itemView);
 				layout.setTiledLayout(item.tiledLayout);
+				for(int i=0; i<controllers.size(); i++){
+					((MediaGridLayout.LayoutParams) controllers.get(i).view.getLayoutParams()).tile=item.tiledLayout.tiles[i];
+				}
 			}
 			controllers.get(index).setImage(drawable);
 		}
