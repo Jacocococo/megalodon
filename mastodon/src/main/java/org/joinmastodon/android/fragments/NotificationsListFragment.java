@@ -58,10 +58,10 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 	private boolean onlyMentions;
 	private boolean onlyPosts;
 	private String maxID;
-	private boolean reloadingFromCache, markerLoaded;
+	private boolean reloadingFromCache, markerLoaded, unreadCountLoaded;
 	private DiscoverInfoBannerHelper bannerHelper;
 	private int accurateUnreadCount=-1;
-	private boolean usesUnreadEndpoint, unreadCountLoaded;
+	private boolean usesUnreadEndpoint, checkedForUnreadEndpoint;
 
 	@Override
 	protected boolean wantsComposeButton() {
@@ -79,10 +79,6 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 		if (onlyPosts) {
 			bannerHelper=new DiscoverInfoBannerHelper(DiscoverInfoBannerHelper.BannerType.POST_NOTIFICATIONS, accountID);
 		}
-
-		Instance instance=getInstance().get();
-		if(instance.v2!=null && instance.v2.apiVersions!=null && instance.v2.apiVersions.mastodon>=2 && !instance.isAkkoma())
-			usesUnreadEndpoint=true;
 	}
 
 	@Override
@@ -144,6 +140,15 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 		if(getParentFragment() instanceof NotificationsFragment nf && nf.savingMarkers){
 			nf.refreshAfterSavingMarkers=true;
 			return;
+		}
+
+		if(!checkedForUnreadEndpoint){
+			Instance instance=getInstance().orElse(null);
+			if(instance!=null){
+				if(instance.v2!=null && instance.v2.apiVersions!=null && instance.v2.apiVersions.mastodon>=2 && !instance.isAkkoma())
+					usesUnreadEndpoint=true;
+				checkedForUnreadEndpoint=true;
+			}
 		}
 
 		dataLoading=true;
