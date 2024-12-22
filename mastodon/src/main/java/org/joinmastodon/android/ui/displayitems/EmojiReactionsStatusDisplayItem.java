@@ -200,6 +200,8 @@ public class EmojiReactionsStatusDisplayItem extends StatusDisplayItem {
 			addButton.setVisibility(session.getLocalPreferences().newEmojiReactionButton != AccountLocalPreferences.NewEmojiReactionButton.WITH_REACTIONS
 					? View.GONE
 					: View.VISIBLE);
+			if(emojiKeyboard!=null && emojiKeyboard.isVisible())
+				emojiKeyboard.toggleKeyboardPopup(null);
 			space.setVisibility(View.GONE);
 			updateVisibility(item.isHidden(), true);
 			imgLoader.updateImages();
