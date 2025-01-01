@@ -1,3 +1,55 @@
+# Patches
+This fork of Megalodon contains a lot of patches on top of upstream Megalodon. Despite continuing its version codes, this project is not intended to be a continuation of the Megalodon app. It is merely a personal fork with changes I wanted for myself that I'm releasing in case anyone else wants to use it. For this reason, you should not expect it to be regularly updated or well maintained. The app has a separate ID from upstream Megalodon meaning that it can be installed on the side and is treated by Android as a separate app
+
+Changes in this fork include:
+- Lots of improvements on both Iceshrimp-JS and Iceshrimp.NET, see sk22#1000
+- Option to replace either the bookmark or share button with a new reaction button
+- Fixes related to displaying quotes
+- Fix previewing posts on Akkoma
+- Emojis are no longer forced to fit a square
+- Fix icon sizes and placement in pop-up menus 
+- Fix for performance issues in home timeline that caused custom emoji animations to stutter
+- Only use the system file picker
+  - Previously the app would ask to choose between media and file picker which were basically identical
+- Show if account has sent a follow request in profile view
+  - Requires support from server
+- Load more than 40 follow requests
+- Added setting to disable link cards
+- Display emoji from reaction notification in a better way
+- Show account migration notifications and unknown notification types
+- Fix some images being too small in the photo viewer
+- Merge inline avatar pull requests from upstream Megalodon
+  - Inline avatars for boosts sk22#977
+  - Inline avatars in thread replies sk22#978
+  - Changed how they are displayed
+  - Added setting to disable them
+- Lots of improvements to the unread notifications marker
+  - Uses theme color instead of always being red
+  - Notifications are only marked as read when manually refreshing
+  - The top is no longer cut off on devices where that previously happened
+  - The count is no longer limited to 40+
+    - It will be fully accurate on Akkoma
+    - It will go up to 100+ on Mastodon v4.3.0+ until more notifications are loaded by scrolling through them
+    - It will now only show 20+ on other server software but it will also increase when loading more by scrolling through them
+  - Fixed a bug where the count would show 40 despite having nowhere near that amount
+  - Fixed an issue where the marker wouldn't disappear after marking notifications as read
+  - Other small fixes and improvements
+- Cherry-picked some changes from Mastodon for Android
+  - Don't auto-refresh notifications if the user scrolled too far ([ac1e5e991](https://github.com/mastodon/mastodon-android/commit/ac1e5e991))
+  - Don't include crappy alt text from gboard (mastodon#722)
+  - Improved link cards ([a200701e4](https://github.com/mastodon/mastodon-android/commit/a200701e4))
+  - Muting conversations ([ff7948ad8](https://github.com/mastodon/mastodon-android/commit/ff7948ad8))
+  - Better media layout ([36f4770ca](https://github.com/mastodon/mastodon-android/commit/36f4770ca))
+  - Media info sheet ([5d7c37262](https://github.com/mastodon/mastodon-android/commit/5d7c37262))
+  - Redesigned extended footer from thread view (not merged directly)
+  - Fixed custom emojis on GoToSocial (mastodon#948)
+- Various crash fixes
+- Fixed memory leak issues on some devices that caused slowdowns until crash
+
+As for the weird things in this repository: it was originially used for contributing to upstream Megalodon which is why the branch called main only has one of these changes. Since GitHub doesn't allow having multiple forks of the "same" repository (different forks count as the same), this repository also hosts things like Shrimped Moshidon. All releases that are for Megalodon Patches will simply have the version name as the release name while everything with special names will be other things that I'm forced to host in this repository like Shrimped Moshidon. In other words, any release which name isn't just the version code is *not* a release of Megalodon Patches but is something else
+
+#
+
 ![Pink logo with pink shark](mastodon/src/main/res/mipmap-xhdpi/ic_launcher_round.png)
 
 # Megalodon
