@@ -130,7 +130,7 @@ public class GithubSelfUpdaterImpl extends GithubSelfUpdater{
 				Matcher matcher=pattern.matcher(tag);
 				if(!matcher.find()){
 					//Log.w(TAG, "actuallyCheckForUpdates: release tag has wrong format: "+tag);
-					return;
+					continue;
 				}
 				int newMajor=Integer.parseInt(matcher.group(1)),
 						newMinor=Integer.parseInt(matcher.group(2)),
