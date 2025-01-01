@@ -115,7 +115,7 @@ public class GithubSelfUpdaterImpl extends GithubSelfUpdater{
 
 	private void actuallyCheckForUpdates(){
 		Request req=new Request.Builder()
-				.url("https://api.github.com/repos/sk22/megalodon/releases")
+				.url("https://api.github.com/repos/Jacocococo/megalodon/releases")
 				.build();
 		Call call=MastodonAPIController.getHttpClient().newCall(req);
 		try(Response resp=call.execute()){
@@ -126,10 +126,10 @@ public class GithubSelfUpdaterImpl extends GithubSelfUpdater{
 
 				String tag=obj.get("tag_name").getAsString();
 				String changelog=obj.get("body").getAsString();
-				Pattern pattern=Pattern.compile("v?(\\d+)\\.(\\d+)\\.(\\d+)\\+fork\\.(\\d+)");
+				Pattern pattern=Pattern.compile("^v?(\\d+)\\.(\\d+)\\.(\\d+)\\+fork\\.(\\d+)$");
 				Matcher matcher=pattern.matcher(tag);
 				if(!matcher.find()){
-					Log.w(TAG, "actuallyCheckForUpdates: release tag has wrong format: "+tag);
+					//Log.w(TAG, "actuallyCheckForUpdates: release tag has wrong format: "+tag);
 					return;
 				}
 				int newMajor=Integer.parseInt(matcher.group(1)),
