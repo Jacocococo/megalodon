@@ -9,12 +9,12 @@ java {
 }
 
 android {
-	compileSdk 33
+	compileSdk 35
 	defaultConfig {
 		archivesBaseName = "megalodon"
 		applicationId "org.joinmastodon.android.sk.patches"
 		minSdk 23
-		targetSdk 33
+		targetSdk 35
 		versionCode 110
 		versionName "2.1.6+fork.110"
 		testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
