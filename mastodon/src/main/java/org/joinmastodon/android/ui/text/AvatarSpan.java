@@ -28,8 +28,14 @@ public class AvatarSpan extends CustomEmojiSpan{
 	@Override
 	public void draw(@NonNull Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int bottom, @NonNull Paint paint){
 		//modified draw of a CustomEmojiSpan, drawing a circular image instead.
-		if(drawable==null)
+		if(drawable==null){
+			int size=V.dp(20);
+			int alpha=paint.getAlpha();
+			paint.setAlpha(alpha>>1);
+			canvas.drawRoundRect(x, top, x+size, top+size, size/4f, size/4f, paint);
+			paint.setAlpha(alpha);
 			return;
+		}
 		int size=Math.round(paint.descent()-paint.ascent());
 		Rect bounds=drawable.getBounds();
 		int dw=drawable.getIntrinsicWidth();
@@ -46,5 +52,4 @@ public class AvatarSpan extends CustomEmojiSpan{
 		drawable.draw(canvas);
 		canvas.restore();
 	}
-
 }
