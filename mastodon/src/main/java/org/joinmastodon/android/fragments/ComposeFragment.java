@@ -1358,11 +1358,6 @@ public class ComposeFragment extends MastodonToolbarFragment implements OnBackPr
 			intent.putExtra(Intent.EXTRA_MIME_TYPES,
 					instance.configuration.mediaAttachments.supportedMimeTypes.toArray(
 							new String[0]));
-		}else{
-			if(!usePhotoPicker){
-				// If photo picker is being used these are the default mimetypes.
-				intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
-			}
 		}
 		intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
 		startActivityForResult(intent, MEDIA_RESULT);
