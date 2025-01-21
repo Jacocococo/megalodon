@@ -14,6 +14,7 @@ import com.squareup.otto.Subscribe;
 import org.joinmastodon.android.E;
 import org.joinmastodon.android.GlobalUserPreferences;
 import org.joinmastodon.android.R;
+import org.joinmastodon.android.api.MastodonErrorResponse;
 import org.joinmastodon.android.api.requests.markers.GetMarkers;
 import org.joinmastodon.android.api.requests.notifications.GetUnreadNotificationsCount;
 import org.joinmastodon.android.api.session.AccountSessionManager;
@@ -223,7 +224,15 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 						}
 
 						@Override
-						public void onError(ErrorResponse error){}
+						public void onError(ErrorResponse error){
+							if(error instanceof MastodonErrorResponse mastodonError && mastodonError.httpStatus==404){
+								if(!dataLoading && (!usesUnreadEndpoint || unreadCountLoaded)){
+									updateUnreadCount();
+								}else{
+									markerLoaded=true;
+								}
+							}
+						}
 					})
 					.exec(getAccountID());
 		}

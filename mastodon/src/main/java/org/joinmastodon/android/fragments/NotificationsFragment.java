@@ -25,6 +25,7 @@ import com.squareup.otto.Subscribe;
 import org.joinmastodon.android.E;
 import org.joinmastodon.android.GlobalUserPreferences;
 import org.joinmastodon.android.R;
+import org.joinmastodon.android.api.MastodonErrorResponse;
 import org.joinmastodon.android.api.requests.accounts.GetFollowRequests;
 import org.joinmastodon.android.api.requests.markers.SaveMarkers;
 import org.joinmastodon.android.api.requests.notifications.PleromaMarkNotificationsRead;
@@ -134,7 +135,7 @@ public class NotificationsFragment extends MastodonToolbarFragment implements Sc
 
 		AccountSession session=getSession();
 		session.setNotificationsMarker(id);
-		session.setUnreadNotificationsCount(0);
+		session.setUnreadNotificationsCount(-1);
 
 		if(refreshAfterSavingMarkers)
 			allNotificationsFragment.onRefresh();
@@ -180,7 +181,10 @@ public class NotificationsFragment extends MastodonToolbarFragment implements Sc
 								onSaveMarkersSuccess(id);
 							return;
 						}
-						onSaveMarkersError(previousID);
+						if(error instanceof MastodonErrorResponse mastodonError && mastodonError.httpStatus==404){
+							onSaveMarkersSuccess(id);
+						}else
+							onSaveMarkersError(previousID);
 					}
 				})
 				.exec(accountID);
