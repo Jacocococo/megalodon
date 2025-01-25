@@ -66,7 +66,6 @@ public class HtmlParser{
 						")" +
 					")";
 	public static final Pattern URL_PATTERN=Pattern.compile(VALID_URL_PATTERN_STRING, Pattern.CASE_INSENSITIVE);
-	private static Pattern EMOJI_CODE_PATTERN=Pattern.compile(":([\\w]+):");
 
 	private HtmlParser(){}
 
@@ -220,8 +219,16 @@ public class HtmlParser{
 		return ssb;
 	}
 
+	private static Pattern createPatternFromEmojis(List<Emoji> emojis){
+		if(emojis==null || emojis.isEmpty()) return null;
+		String pattern=emojis.stream().map(e->Pattern.quote(e.shortcode)).collect(Collectors.joining("|"));
+		return Pattern.compile(":(" + pattern + "):");
+	}
+
 	public static void parseCustomEmoji(SpannableStringBuilder ssb, List<Emoji> emojis){
-		if(emojis==null) return;
+		Pattern emojiCodePattern=createPatternFromEmojis(emojis);
+		if(emojiCodePattern==null) return;
+
 		Map<String, Emoji> emojiByCode =
 			emojis.stream()
 			.collect(
@@ -232,7 +239,7 @@ public class HtmlParser{
 				})
 			);
 
-		Matcher matcher=EMOJI_CODE_PATTERN.matcher(ssb);
+		Matcher matcher=emojiCodePattern.matcher(ssb);
 		int spanCount=0;
 		CustomEmojiSpan lastSpan=null;
 		while(matcher.find()){
@@ -254,7 +261,8 @@ public class HtmlParser{
 	}
 
 	public static void setTextWithCustomEmoji(TextView view, String text, List<Emoji> emojis){
-		if(!EMOJI_CODE_PATTERN.matcher(text).find()){
+		Pattern pattern=createPatternFromEmojis(emojis);
+		if(pattern==null || !pattern.matcher(text).find()){
 			view.setText(text);
 			return;
 		}
