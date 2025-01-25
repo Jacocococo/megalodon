@@ -183,8 +183,9 @@ public class NotificationsFragment extends MastodonToolbarFragment implements Sc
 						}
 						if(error instanceof MastodonErrorResponse mastodonError && mastodonError.httpStatus==404){
 							onSaveMarkersSuccess(id);
-						}else
+						}else{
 							onSaveMarkersError(previousID);
+						}
 					}
 				})
 				.exec(accountID);

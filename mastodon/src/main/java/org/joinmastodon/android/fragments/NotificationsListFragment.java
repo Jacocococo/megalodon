@@ -242,6 +242,11 @@ public class NotificationsListFragment extends BaseStatusListFragment<Notificati
 		markerLoaded=false;
 		unreadCountLoaded=false;
 		if(getParentFragment() instanceof NotificationsFragment nf && nf.getParentFragment() instanceof HomeFragment hf){
+			if(nf.unreadMarker==null){
+				hf.updateUnreadCount(0, false);
+				return;
+			}
+
 			if(accurateUnreadCount!=-1 && !usesUnreadEndpoint)
 				hf.updateUnreadCount(accurateUnreadCount, false);
 			else
