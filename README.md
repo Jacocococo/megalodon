@@ -5,12 +5,15 @@ Changes in this fork include:
 - Lots of improvements on both Iceshrimp-JS and Iceshrimp.NET, see sk22#1000
 - Option to replace either the bookmark or share button with a new reaction button
 - Fixes related to displaying quotes
+- Quotes of the focused post will now show up at the end of the thread on Akkoma
 - Fix previewing posts on Akkoma
 - Emojis are no longer forced to fit a square
+- Custom emojis named using special characters will now be displayed properly
 - Fix icon sizes and placement in pop-up menus 
 - Fix for performance issues in home timeline that caused custom emoji animations to stutter
 - Only use the system file picker
   - Previously the app would ask to choose between media and file picker which were basically identical
+- Allow picking any file on servers that don't specify supported filetypes
 - Show if account has sent a follow request in profile view
   - Requires support from server
 - Load more than 40 follow requests
