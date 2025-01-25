@@ -202,6 +202,14 @@ public abstract class StatusDisplayItem{
 						)));
 			}
 
+			if(statusForContent.quote!=null && fragment instanceof ThreadFragment tf
+					&& statusForContent.quote.id.equals(tf.getMainStatus().id)){
+				String text=fragment.getString(R.string.sk_quoting_user, statusForContent.quote.account.getDisplayName());
+				items.add(new ReblogOrReplyLineStatusDisplayItem(parentID, fragment, text, statusForContent.account.emojis,
+						R.drawable.ic_fluent_arrow_reply_20sp_filled, null, null,
+						text, statusForContent, statusForContent.account));
+			}
+
 			if (replyLine != null) {
 				Optional<ReblogOrReplyLineStatusDisplayItem> primaryLine = items.stream()
 						.filter(i -> i instanceof ReblogOrReplyLineStatusDisplayItem)

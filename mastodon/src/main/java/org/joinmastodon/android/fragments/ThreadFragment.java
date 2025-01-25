@@ -329,11 +329,19 @@ public class ThreadFragment extends StatusListFragment implements ProvidesAssist
 			}
 		}
 
+		List<Status> mainStatusQuotes=new ArrayList<>();
+		for(Status s:context.descendants){
+			if(s.quote != null && s.quote.id.equals(mainStatus.id)){
+				mainStatusQuotes.add(s);
+			}
+		}
+
 		context.ancestors=context.ancestors.stream().filter(s -> threadIds.contains(s.id)).collect(Collectors.toList());
 		context.descendants=getDescendantsOrdered(mainStatus.id,
 				context.descendants.stream()
 						.filter(s -> threadIds.contains(s.id))
 						.collect(Collectors.toList()));
+		context.descendants.addAll(mainStatusQuotes);
 	}
 
 	private static List<Status> getDescendantsOrdered(String id, List<Status> statuses){
