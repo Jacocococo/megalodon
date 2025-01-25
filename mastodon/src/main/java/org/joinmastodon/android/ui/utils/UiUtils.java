@@ -1527,14 +1527,8 @@ public class UiUtils {
 	@SuppressLint("InlinedApi")
 	public static Intent getMediaPickerIntent(String[] mimeTypes, int maxCount){
 		Intent intent;
-		if(isPhotoPickerAvailable()){
-			intent=new Intent(MediaStore.ACTION_PICK_IMAGES);
-			if(maxCount>1)
-				intent.putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, maxCount);
-		}else{
-			intent=new Intent(Intent.ACTION_GET_CONTENT);
-			intent.addCategory(Intent.CATEGORY_OPENABLE);
-		}
+		intent=new Intent(Intent.ACTION_GET_CONTENT);
+		intent.addCategory(Intent.CATEGORY_OPENABLE);
 		if(mimeTypes.length>1){
 			intent.setType("*/*");
 			intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
