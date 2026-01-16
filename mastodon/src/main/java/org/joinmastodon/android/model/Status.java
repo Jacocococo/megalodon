@@ -284,19 +284,27 @@ public class Status extends BaseModel implements DisplayItemsParent, Searchable{
 		public Status deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
 			JsonObject obj=json.getAsJsonObject();
 
-			Status quote=null;
-			if (obj.has("quote") && obj.get("quote").isJsonObject())
-				quote=gson.fromJson(obj.get("quote"), Status.class);
-			obj.remove("quote");
-
 			Status reblog=null;
 			if (obj.has("reblog"))
 				reblog=gson.fromJson(obj.get("reblog"), Status.class);
 			obj.remove("reblog");
 
+			Object quote=null;
+			if (obj.has("quote") && obj.get("quote").isJsonObject()){
+				if(obj.get("quote").getAsJsonObject().has("quoted_status"))
+					quote=gson.fromJson(obj.get("quote"), MastodonQuote.class);
+				else
+					quote=gson.fromJson(obj.get("quote"), Status.class);
+			}
+			obj.remove("quote");
+
 			Status status=gsonWithoutDeserializer.fromJson(json, Status.class);
-			status.quote=quote;
 			status.reblog=reblog;
+
+			if(quote instanceof Status s)
+				status.quote=s;
+			else if(quote instanceof MastodonQuote mq)
+				status.quote=mq.quotedStatus;
 
 			return status;
 		}
