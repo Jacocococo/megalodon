@@ -26,6 +26,7 @@ import org.joinmastodon.android.model.Emoji;
 import org.joinmastodon.android.model.FilterResult;
 import org.joinmastodon.android.model.Hashtag;
 import org.joinmastodon.android.model.Mention;
+import org.joinmastodon.android.model.Status;
 import org.joinmastodon.android.ui.utils.UiUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -69,8 +70,8 @@ public class HtmlParser{
 
 	private HtmlParser(){}
 
-	public static SpannableStringBuilder parse(String source, List<Emoji> emojis, List<Mention> mentions, List<Hashtag> tags, String accountID){
-		return parse(source, emojis, mentions, tags, accountID, null);
+	public static SpannableStringBuilder parse(String source, List<Emoji> emojis, List<Mention> mentions, List<Hashtag> tags, String accountID, Object parentObject){
+		return parse(source, emojis, mentions, tags, accountID, parentObject, null);
 	}
 
 	/**
@@ -85,7 +86,7 @@ public class HtmlParser{
 	 * @param emojis Custom emojis that are present in source as <code>:code:</code>
 	 * @return a spanned string
 	 */
-	public static SpannableStringBuilder parse(String source, List<Emoji> emojis, List<Mention> mentions, List<Hashtag> tags, String accountID, Context context){
+	public static SpannableStringBuilder parse(String source, List<Emoji> emojis, List<Mention> mentions, List<Hashtag> tags, String accountID, Object parentObject, Context context){
 		class SpanInfo{
 			public Object span;
 			public int start;
@@ -113,7 +114,10 @@ public class HtmlParser{
 		int colorInsert=UiUtils.getThemeColor(context, R.attr.colorM3Success);
 		int colorDelete=UiUtils.getThemeColor(context, R.attr.colorM3Error);
 
-		Jsoup.parseBodyFragment(source).body().traverse(new NodeVisitor(){
+		Element body = Jsoup.parseBodyFragment(source).body();
+		if(parentObject instanceof Status status && status.quote!=null)
+			body.select(".quote-inline").remove();
+		body.traverse(new NodeVisitor(){
 			private final ArrayList<SpanInfo> openSpans=new ArrayList<>();
 
 			@Override

@@ -36,7 +36,7 @@ public class AccountViewModel{
 			parsedName=HtmlParser.parseCustomEmoji(account.getDisplayName(), account.emojis);
 		else
 			parsedName=account.getDisplayName();
-		parsedBio=HtmlParser.parse(account.note, account.emojis, Collections.emptyList(), Collections.emptyList(), accountID);
+		parsedBio=HtmlParser.parse(account.note, account.emojis, Collections.emptyList(), Collections.emptyList(), accountID, account);
 		SpannableStringBuilder ssb=new SpannableStringBuilder(parsedName);
 		ssb.append(parsedBio);
 		emojiHelper.setText(ssb);
