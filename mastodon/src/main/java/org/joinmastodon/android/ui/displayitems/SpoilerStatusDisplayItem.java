@@ -99,11 +99,13 @@ public class SpoilerStatusDisplayItem extends StatusDisplayItem{
 				title.setText(item.parsedTitle);
 			}
 			action.setText(item.status.spoilerRevealed ? R.string.spoiler_hide : R.string.sk_spoiler_show);
+			StatusDisplayItem next=getNextVisibleDisplayItem().orElse(null);
+			if(next!=null && !next.parentID.equals(item.parentID)) next=null;
 			itemView.setPadding(
 					itemView.getPaddingLeft(),
 					itemView.getPaddingTop(),
 					itemView.getPaddingRight(),
-					item.inset ? itemView.getPaddingTop() : 0
+					item.inset || next instanceof ExtendedFooterStatusDisplayItem ? itemView.getPaddingTop() : 0
 			);
 			mediaIcon.setVisibility(item.attachmentCount > 0 ? View.VISIBLE : View.GONE);
 			mediaIcon.setImageResource(item.attachmentCount > 1
