@@ -61,5 +61,7 @@
 			android:tint="?colorM3DarkOnSurface"
 			android:background="@drawable/bg_round_ripple"/>
 
+		<include layout="@layout/alt_text_badge" />
+
 	</FrameLayout>
 </FrameLayout>

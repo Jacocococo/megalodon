@@ -1,7 +1,13 @@
 package org.joinmastodon.android.ui.displayitems;
 
+import static org.joinmastodon.android.GlobalUserPreferences.showNoAltIndicator;
+
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
-import android.content.Context;
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -9,14 +15,17 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.SystemClock;
 import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.joinmastodon.android.AudioPlayerService;
+import org.joinmastodon.android.GlobalUserPreferences;
 import org.joinmastodon.android.R;
 import org.joinmastodon.android.fragments.BaseStatusListFragment;
 import org.joinmastodon.android.model.Attachment;
@@ -24,11 +33,16 @@ import org.joinmastodon.android.model.Status;
 import org.joinmastodon.android.ui.OutlineProviders;
 import org.joinmastodon.android.ui.drawables.AudioAttachmentBackgroundDrawable;
 import org.joinmastodon.android.ui.utils.UiUtils;
+import org.joinmastodon.android.ui.views.MaxWidthFrameLayout;
 
 import androidx.palette.graphics.Palette;
+
+import java.util.ArrayList;
+
 import me.grishka.appkit.imageloader.ImageLoaderViewHolder;
 import me.grishka.appkit.imageloader.requests.ImageLoaderRequest;
 import me.grishka.appkit.imageloader.requests.UrlImageLoaderRequest;
+import me.grishka.appkit.utils.CubicBezierInterpolator;
 import me.grishka.appkit.utils.V;
 
 public class AudioStatusDisplayItem extends StatusDisplayItem{
@@ -69,10 +83,20 @@ public class AudioStatusDisplayItem extends StatusDisplayItem{
 		private int lastPosSeconds=-1;
 		private AudioPlayerService.PlayState state;
 
+		private final View altButton, noAltButton, btnsWrap;
+		private final MaxWidthFrameLayout overlays;
+		private final FrameLayout altTextWrapper;
+		private final TextView altTextButton;
+		private final ImageView noAltTextButton;
+		private final View altTextScroller;
+		private final ImageButton altTextClose;
+		private final TextView altText, noAltText;
+		private Animator altTextAnimator;
+
 		private final Runnable positionUpdater=this::updatePosition;
 
-		public Holder(Context context, ViewGroup parent){
-			super(context, R.layout.display_item_audio, parent);
+		public Holder(Activity activity, ViewGroup parent){
+			super(activity, R.layout.display_item_audio, parent);
 			playPauseBtn=findViewById(R.id.play_pause_btn);
 			time=findViewById(R.id.time);
 			image=findViewById(R.id.image);
@@ -97,10 +121,31 @@ public class AudioStatusDisplayItem extends StatusDisplayItem{
 			image.setOutlineProvider(OutlineProviders.OVAL);
 			image.setClipToOutline(true);
 			content.setBackground(bgDrawable=new AudioAttachmentBackgroundDrawable());
+
+			altButton=findViewById(R.id.alt_button);
+			noAltButton=findViewById(R.id.no_alt_button);
+			btnsWrap=findViewById(R.id.alt_badges);
+
+			overlays=new MaxWidthFrameLayout(activity);
+			overlays.setMaxWidth(UiUtils.MAX_WIDTH);
+			content.addView(overlays, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, Gravity.CENTER_HORIZONTAL));
+
+			activity.getLayoutInflater().inflate(R.layout.overlay_image_alt_text, overlays);
+			altTextWrapper=overlays.findViewById(R.id.alt_text_wrapper);
+			altTextButton=overlays.findViewById(R.id.alt_button);
+			noAltTextButton=overlays.findViewById(R.id.no_alt_button);
+			altTextScroller=overlays.findViewById(R.id.alt_text_scroller);
+			altTextClose=overlays.findViewById(R.id.alt_text_close);
+			altText=overlays.findViewById(R.id.alt_text);
+			noAltText=overlays.findViewById(R.id.no_alt_text);
+			altTextClose.setOnClickListener(this::onAltTextCloseClick);
 		}
 
 		@Override
 		public void onBind(AudioStatusDisplayItem item){
+			if(altTextAnimator!=null)
+				altTextAnimator.cancel();
+
 			int seconds=(int)item.attachment.getDuration();
 			String duration=UiUtils.formatMediaDuration(seconds);
 			AudioPlayerService service=AudioPlayerService.getInstance();
@@ -128,6 +173,18 @@ public class AudioStatusDisplayItem extends StatusDisplayItem{
 				mainColor=0xff808080;
 			}
 			updateColors(mainColor);
+
+			boolean hasAltText = !TextUtils.isEmpty(item.attachment.description);
+			btnsWrap.setVisibility(View.VISIBLE);
+			altButton.setVisibility(hasAltText ? View.VISIBLE : View.GONE); // don't respect setting because otherwise there is no way to see the alt text
+			noAltButton.setVisibility(!hasAltText && GlobalUserPreferences.showNoAltIndicator ? View.VISIBLE : View.GONE);
+
+			btnsWrap.setOnClickListener(this::onAltTextClick);
+			btnsWrap.setAlpha(1f);
+
+			altTextButton.setVisibility(hasAltText ? View.VISIBLE : View.GONE);
+			noAltTextButton.setVisibility(!hasAltText && GlobalUserPreferences.showNoAltIndicator ? View.VISIBLE : View.GONE);
+			altTextWrapper.setVisibility(View.GONE);
 		}
 
 		private void onPlayPauseClick(View v){
@@ -228,6 +285,113 @@ public class AudioStatusDisplayItem extends StatusDisplayItem{
 				int newPos=Math.min(Math.max(0, service.getPosition()+seekAmount), (int)(item.attachment.getDuration()*1000));
 				service.seekTo(newPos);
 			}
+		}
+
+		private void onAltTextClick(View v){
+			if(altTextAnimator!=null)
+				altTextAnimator.cancel();
+//			V.setVisibilityAnimated(hideSensitiveButton, View.GONE);
+			V.cancelVisibilityAnimation(altTextWrapper);
+			v.setVisibility(View.INVISIBLE);
+			Attachment att=item.attachment;
+			boolean hasAltText = !TextUtils.isEmpty(att.description);
+			if (!hasAltText && !showNoAltIndicator) return;
+			altTextButton.setVisibility(hasAltText ? View.VISIBLE : View.GONE);
+			noAltTextButton.setVisibility(!hasAltText && showNoAltIndicator ? View.VISIBLE : View.GONE);
+			altText.setVisibility(hasAltText ? View.VISIBLE : View.GONE);
+			noAltText.setVisibility(!hasAltText && showNoAltIndicator ? View.VISIBLE : View.GONE);
+			altText.setText(att.description);
+			altTextWrapper.setVisibility(View.VISIBLE);
+			altTextWrapper.setBackgroundResource(hasAltText ? R.drawable.bg_image_alt_text_overlay : R.drawable.bg_image_no_alt_overlay);
+			altTextWrapper.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener(){
+				@Override
+				public boolean onPreDraw(){
+					altTextWrapper.getViewTreeObserver().removeOnPreDrawListener(this);
+
+					int[] loc={0, 0};
+					v.getLocationInWindow(loc);
+					int btnL=loc[0], btnT=loc[1];
+					overlays.getLocationInWindow(loc);
+					btnL-=loc[0];
+					btnT-=loc[1];
+
+					ViewGroup.MarginLayoutParams margins = (ViewGroup.MarginLayoutParams) altTextWrapper.getLayoutParams();
+					ArrayList<Animator> anims=new ArrayList<>();
+					anims.add(ObjectAnimator.ofFloat(altTextButton, View.ALPHA, 1, 0));
+					anims.add(ObjectAnimator.ofFloat(noAltTextButton, View.ALPHA, 1, 0));
+					anims.add(ObjectAnimator.ofFloat(altTextScroller, View.ALPHA, 0, 1));
+					anims.add(ObjectAnimator.ofFloat(altTextClose, View.ALPHA, 0, 1));
+					anims.add(ObjectAnimator.ofInt(altTextWrapper, "left", btnL+margins.leftMargin, altTextWrapper.getLeft()));
+					anims.add(ObjectAnimator.ofInt(altTextWrapper, "top", btnT+margins.topMargin, altTextWrapper.getTop()));
+					anims.add(ObjectAnimator.ofInt(altTextWrapper, "right", btnL+v.getWidth()-margins.rightMargin, altTextWrapper.getRight()));
+					anims.add(ObjectAnimator.ofInt(altTextWrapper, "bottom", btnT+v.getHeight()-margins.bottomMargin, altTextWrapper.getBottom()));
+					for(Animator a:anims)
+						a.setDuration(300);
+
+					if(btnsWrap!=v){
+						anims.add(ObjectAnimator.ofFloat(btnsWrap, View.ALPHA, 1, 0).setDuration(150));
+					}
+
+					AnimatorSet set=new AnimatorSet();
+					set.playTogether(anims);
+					set.setInterpolator(CubicBezierInterpolator.DEFAULT);
+					set.addListener(new AnimatorListenerAdapter(){
+						@Override
+						public void onAnimationEnd(Animator animation){
+							altTextAnimator=null;
+							btnsWrap.setVisibility(View.INVISIBLE);
+						}
+					});
+					altTextAnimator=set;
+					set.start();
+
+					return true;
+				}
+			});
+		}
+
+		private void onAltTextCloseClick(View v){
+			if(altTextAnimator!=null)
+				altTextAnimator.cancel();
+
+			V.cancelVisibilityAnimation(altTextWrapper);
+
+			int[] loc={0, 0};
+			btnsWrap.getLocationInWindow(loc);
+			int btnL=loc[0], btnT=loc[1];
+			overlays.getLocationInWindow(loc);
+			btnL-=loc[0];
+			btnT-=loc[1];
+
+			ViewGroup.MarginLayoutParams margins = (ViewGroup.MarginLayoutParams) altTextWrapper.getLayoutParams();
+			ArrayList<Animator> anims=new ArrayList<>();
+			anims.add(ObjectAnimator.ofFloat(altTextButton, View.ALPHA, 1));
+			anims.add(ObjectAnimator.ofFloat(noAltTextButton, View.ALPHA, 1));
+			anims.add(ObjectAnimator.ofFloat(altTextScroller, View.ALPHA, 0));
+			anims.add(ObjectAnimator.ofFloat(altTextClose, View.ALPHA, 0));
+			anims.add(ObjectAnimator.ofInt(altTextWrapper, "left", btnL+margins.leftMargin));
+			anims.add(ObjectAnimator.ofInt(altTextWrapper, "top", btnT+margins.topMargin));
+			anims.add(ObjectAnimator.ofInt(altTextWrapper, "right", btnL+btnsWrap.getWidth()-margins.rightMargin));
+			anims.add(ObjectAnimator.ofInt(altTextWrapper, "bottom", btnT+btnsWrap.getHeight()-margins.bottomMargin));
+			for(Animator a:anims)
+				a.setDuration(300);
+
+			anims.add(ObjectAnimator.ofFloat(btnsWrap, View.ALPHA, 1).setDuration(150));
+
+			AnimatorSet set=new AnimatorSet();
+			set.playTogether(anims);
+			set.setInterpolator(CubicBezierInterpolator.DEFAULT);
+			set.addListener(new AnimatorListenerAdapter(){
+				@Override
+				public void onAnimationEnd(Animator animation){
+					altTextAnimator=null;
+					V.setVisibilityAnimated(altTextWrapper, View.GONE);
+					V.setVisibilityAnimated(btnsWrap, View.VISIBLE);
+					btnsWrap.setAlpha(1);
+				}
+			});
+			altTextAnimator=set;
+			set.start();
 		}
 
 		@Override
